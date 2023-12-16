@@ -1,0 +1,7 @@
+bin/
+# cache/
+data/
+outdated/
+# conf.ini
+test.go
+test_test.go
