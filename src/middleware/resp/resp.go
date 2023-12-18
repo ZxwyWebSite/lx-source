@@ -2,7 +2,6 @@
 package resp
 
 import (
-	_ "embed"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -37,9 +36,6 @@ var statusMap = map[int]int{
 	6: http.StatusBadRequest,          // 参数错误
 }
 
-//go:embed error.base64
-var errormp3 string
-
 // 返回请求
 /*
  注：Code不为0时调用c.Abort()终止Handler
@@ -51,7 +47,7 @@ func (o *Resp) Execute(c *gin.Context) {
 	}
 	if o.Code != 0 {
 		if o.Code == 2 /*&& o.Data == ``*/ {
-			o.Data = errormp3
+			o.Data = `https://r2eu.zw-cdn.tk/gh/lx-source/static/error.mp3`
 		}
 		c.Abort()
 	}
