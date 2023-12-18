@@ -3,7 +3,6 @@ package localcache
 import (
 	"errors"
 	"lx-source/src/caches"
-	"lx-source/src/env"
 	"net/url"
 	"os"
 	"strings"
@@ -24,13 +23,13 @@ func (c *Cache) getLink(q string) string {
 }
 
 func (c *Cache) Get(q *caches.Query) string {
-	// 加一层缓存，减少重复检测文件造成的性能损耗
-	if _, ok := env.Cache.Get(q.Query()); !ok {
-		if _, e := os.Stat(ztool.Str_FastConcat(c.Path, `/`, q.Query())); e != nil {
-			return ``
-		}
-		env.Cache.Set(q.Query(), struct{}{}, 3600)
+	// 加一层缓存，减少重复检测文件造成的性能损耗 (缓存已移至Router)
+	// if _, ok := env.Cache.Get(q.Query()); !ok {
+	if _, e := os.Stat(ztool.Str_FastConcat(c.Path, `/`, q.Query())); e != nil {
+		return ``
 	}
+	// env.Cache.Set(q.Query(), struct{}{}, 3600)
+	// }
 	return c.getLink(q.Query())
 	// fpath := filepath.Join(c.Path, q.Source, q.MusicID, q.Quality)
 	// if _, e := os.Stat(fpath); e != nil {
@@ -45,7 +44,7 @@ func (c *Cache) Set(q *caches.Query, l string) string {
 		loger.Error(`DownloadFile: %v`, err)
 		return ``
 	}
-	env.Cache.Set(q.Query(), struct{}{}, 3600)
+	// env.Cache.Set(q.Query(), struct{}{}, 3600)
 	return c.getLink(q.Query())
 	// fpath := filepath.Join(c.Path, q.String)
 	// os.MkdirAll(filepath.Dir(fpath), fs.ModePerm)

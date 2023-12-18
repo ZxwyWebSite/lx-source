@@ -98,7 +98,7 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 		}
 		if resp.Code != 200 || resp.Data.AudioInfo.Bitrate == `1` {
 			jx.Debug(`Kw, Err: %#v`, resp)
-			msg = `failed`
+			msg = ztool.Str_FastConcat(`failed: `, resp.Msg)
 			return
 		}
 		outlink = strings.Split(resp.Data.URL, `?`)[0]

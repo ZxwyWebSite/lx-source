@@ -101,6 +101,17 @@ func linkHandler(c *gin.Context) {
 		// if !ok {
 		// 	return &resp.Resp{Code: 6, Msg: `不支持的平台或音质`}
 		// }
+
+		// 查询内存
+		clink, ok := env.Cache.Get(cquery.Query())
+		if ok {
+			if str, ok := clink.(string); ok {
+				if str == `` {
+					return &resp.Resp{Code: 2, Msg: `MemCache Reject`} // 拒绝请求，当前一段时间内解析出错
+				}
+				return &resp.Resp{Msg: `MemCache HIT`, Data: str}
+			}
+		}
 		// 查询缓存
 		var cstat bool
 		if caches.UseCache != nil {
@@ -110,6 +121,7 @@ func linkHandler(c *gin.Context) {
 		if cstat {
 			sc.Debug(`Method: Get, Query: %v`, cquery.Query())
 			if link := caches.UseCache.Get(cquery); link != `` {
+				env.Cache.Set(cquery.Query(), link, 3600)
 				return &resp.Resp{Msg: CacheHIT, Data: link}
 			}
 		} else {
@@ -121,12 +133,14 @@ func linkHandler(c *gin.Context) {
 			if emsg == sources.Err_Verify { // Verify Failed: 不支持的平台或音质
 				return &resp.Resp{Code: 6, Msg: ztool.Str_FastConcat(emsg, `: 不支持的平台或音质`)}
 			}
+			env.Cache.Set(cquery.Query(), ``, 600) // 发生错误的10分钟内禁止再次查询
 			return &resp.Resp{Code: 2, Msg: emsg}
 		}
 		// 缓存并获取直链
 		if outlink != `` && cstat {
 			sc.Debug(`Method: Set, Link: %v`, outlink)
 			if link := caches.UseCache.Set(cquery, outlink); link != `` {
+				env.Cache.Set(cquery.Query(), link, 3600)
 				return &resp.Resp{Msg: CacheSet, Data: link}
 			}
 		}

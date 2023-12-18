@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	Version = `1.0.2-β0.1`
+	Version = `1.0.2-β0.2`
 )
 
 var (
@@ -142,7 +142,7 @@ var (
 		Loger:      Loger.NewGroup(`Config`),
 	})
 	Defer = new(ztool.Err_DeferList)
-	Cache = memo.NewMemoStoreConf(Loger, 300) //memo.NewMemoStore()
+	Cache = memo.NewMemoStoreConf(Loger, 300) // 内存缓存 默认每5分钟进行一次GC //memo.NewMemoStore()
 )
 
 // func init() {
