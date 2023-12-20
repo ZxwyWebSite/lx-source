@@ -2,11 +2,12 @@ package router
 
 import (
 	"lx-source/src/caches"
-	"lx-source/src/caches/localcache"
 	"lx-source/src/env"
 	"lx-source/src/middleware/auth"
+	"lx-source/src/middleware/dynlink"
 	"lx-source/src/middleware/loadpublic"
 	"lx-source/src/middleware/resp"
+	"lx-source/src/middleware/util"
 	"lx-source/src/sources"
 	"net/http"
 
@@ -52,9 +53,11 @@ func InitRouter() *gin.Engine {
 	// r.StaticFile(`/lx-custom-source.js`, `public/lx-custom-source.js`)
 	// 解析接口
 	r.GET(`/link/:s/:id/:q`, auth.AuthHandler, linkHandler)
-	if cache, ok := caches.UseCache.(*localcache.Cache); ok {
-		r.Static(`/file`, cache.Path)
-	}
+	dynlink.LoadHandler(r)
+	// r.GET(`/file/:t/:x/:f`, dynlink.FileHandler())
+	// if cache, ok := caches.UseCache.(*localcache.Cache); ok {
+	// 	r.Static(`/file`, cache.Path)
+	// }
 	// if env.Config.Cache.Mode == `local` {
 	// 	r.Static(`/file`, env.Config.Cache.Local_Path)
 	// }
@@ -83,11 +86,12 @@ const (
 func linkHandler(c *gin.Context) {
 	resp.Wrap(c, func() *resp.Resp {
 		// 获取传入参数 检查合法性
-		parmlen := len(c.Params)
-		parms := make(map[string]string, parmlen)
-		for i := 0; i < parmlen; i++ {
-			parms[c.Params[i].Key] = c.Params[i].Value
-		}
+		// parmlen := len(c.Params)
+		// parms := make(map[string]string, parmlen)
+		// for i := 0; i < parmlen; i++ {
+		// 	parms[c.Params[i].Key] = c.Params[i].Value
+		// }
+		parms := util.ParaMap(c)
 		// getParam := func(p string) string { return strings.TrimSuffix(strings.TrimPrefix(c.Param(p), `/`), `/`) } //strings.Trim(c.Param(p), `/`)
 		s := parms[`s`]   //c.Param(`s`)   //getParam(`s`)   // source 平台 wy, mg, kw
 		id := parms[`id`] //c.Param(`id`) //getParam(`id`) // sid 音乐ID wy: songmid, mg: copyrightId

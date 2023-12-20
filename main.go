@@ -95,6 +95,14 @@ func init() {
 		env.Loger.NewGroup(`DebugMode`).Debug(`已开启调试模式, 将输出更详细日志 (配置文件中 [Main].Debug 改为 false 关闭)`)
 	}
 	genAuth()
+	if env.Config.Main.SysLev {
+		sl := env.Loger.NewGroup(`(beta)SysLev`)
+		if err := ztool.Sys_SetPriorityLev(ztool.Sys_GetPid(), ztool.Sys_PriorityHighest); err != nil {
+			sl.Error(`系统优先级设置失败: %v`, err)
+		} else {
+			sl.Warn(`成功设置较高优先级，此功能可能导致系统不稳定`)
+		}
+	}
 }
 
 func main() {
