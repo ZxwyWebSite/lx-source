@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	Version = `1.0.2-β0.2`
+	Version = `1.0.2-β0.3`
 )
 
 var (
@@ -29,6 +29,7 @@ type (
 		Gzip    bool   `comment:"开启GZip (对已压缩的内容使用会产生反效果)"`
 		LogPath string `comment:"文件日志路径，不填禁用"`
 		Print   bool   `comment:"控制台输出"`
+		SysLev  bool   `comment:"(实验性) 设置进程高优先级"`
 	}
 	Conf_Apis struct {
 		// BindAddr string `comment:"外部访问地址，用于生成文件链接"`
@@ -65,7 +66,8 @@ type (
 		Force bool   `comment:"强制推送更新" json:"force"`
 	}
 	Conf_Cache struct {
-		Mode string `comment:"缓存模式 0: off(关闭), 1: local(本地), 2: cloudreve(云盘 未完善)"`
+		Mode     string `comment:"缓存模式 0: off(关闭), 1: local(本地), 2: cloudreve(云盘 未完善)"`
+		LinkMode string `comment:"外链样式 1: static(永久链), 2: dynamic(临时链)"`
 		// 本地
 		Local_Path string `comment:"本地缓存保存路径"`
 		Local_Bind string `comment:"本地缓存外部访问地址"`
@@ -95,6 +97,7 @@ var (
 			Gzip:    false,
 			LogPath: `/data/logfile.log`,
 			Print:   true,
+			SysLev:  false,
 		},
 		Apis: &Conf_Apis{
 			// BindAddr: `http://192.168.10.22:1011/`,
@@ -123,6 +126,7 @@ var (
 		},
 		Cache: &Conf_Cache{
 			Mode:       `local`, // 缓存模式
+			LinkMode:   `1`,
 			Local_Path: `data/cache`,
 			Local_Bind: `http://127.0.0.1:1011/`,
 			Cloud_Site: `https://cloudreveplus-demo.onrender.com/`,
