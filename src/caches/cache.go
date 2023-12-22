@@ -1,7 +1,7 @@
 package caches
 
 import (
-	"lx-source/src/env"
+	"sync"
 
 	"github.com/ZxwyWebSite/ztool"
 )
@@ -39,12 +39,15 @@ func (*Nullcache) Stat() bool                { return false }
 func (*Nullcache) Init() error               { return nil }
 
 var (
-	Loger = env.Loger.NewGroup(`Caches`)
-
+	// Loger = env.Loger.NewGroup(`Caches`)
 	UseCache Cache = &Nullcache{}
-
 	// ErrNotInited = errors.New(`缓存策略未初始化`)
+	query_pool = sync.Pool{New: func() any { return new(Query) }}
 )
+
+// 对象池相关 (注：结构体释放时一定要清理未导出字段)
+func newQuery() *Query { return query_pool.Get().(*Query) }
+func (c *Query) Free() { c.query = ``; query_pool.Put(c) }
 
 // 根据音质判断文件后缀
 func rext(q string) string {
@@ -56,12 +59,18 @@ func rext(q string) string {
 
 // 生成查询参数 (必须使用此函数初始化)
 func NewQuery(s, id, q string) *Query {
-	return &Query{
-		Source:  s,
-		MusicID: id,
-		Quality: q,
-		Extname: rext(q),
-	}
+	out := newQuery()
+	out.Source = s
+	out.MusicID = id
+	out.Quality = q
+	out.Extname = rext(q)
+	return out
+	// return &Query{
+	// 	Source:  s,
+	// 	MusicID: id,
+	// 	Quality: q,
+	// 	Extname: rext(q),
+	// }
 }
 
 // 获取旧版查询字符串

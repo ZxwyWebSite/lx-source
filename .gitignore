@@ -5,4 +5,4 @@ outdated/
 # conf.ini
 test.go
 test_test.go
-src/sources/builtin/
+# src/sources/builtin/

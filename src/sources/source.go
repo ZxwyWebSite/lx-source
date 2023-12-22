@@ -2,10 +2,9 @@ package sources
 
 import (
 	"lx-source/src/caches"
-	"lx-source/src/env"
 )
 
-var Loger = env.Loger.NewGroup(`Sources`) // JieXiApis
+// var Loger = env.Loger.NewGroup(`Sources`) // JieXiApis
 const (
 	Err_Verify = `Verify Failed`
 )

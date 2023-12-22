@@ -52,7 +52,7 @@ func InitRouter() *gin.Engine {
 	// r.StaticFile(`/favicon.ico`, `public/icon.ico`)
 	// r.StaticFile(`/lx-custom-source.js`, `public/lx-custom-source.js`)
 	// 解析接口
-	r.GET(`/link/:s/:id/:q`, auth.AuthHandler, linkHandler)
+	r.GET(`/link/:s/:id/:q`, auth.InitHandler(linkHandler)...)
 	dynlink.LoadHandler(r)
 	// r.GET(`/file/:t/:x/:f`, dynlink.FileHandler())
 	// if cache, ok := caches.UseCache.(*localcache.Cache); ok {
@@ -86,21 +86,18 @@ const (
 func linkHandler(c *gin.Context) {
 	resp.Wrap(c, func() *resp.Resp {
 		// 获取传入参数 检查合法性
-		// parmlen := len(c.Params)
-		// parms := make(map[string]string, parmlen)
-		// for i := 0; i < parmlen; i++ {
-		// 	parms[c.Params[i].Key] = c.Params[i].Value
-		// }
 		parms := util.ParaMap(c)
 		// getParam := func(p string) string { return strings.TrimSuffix(strings.TrimPrefix(c.Param(p), `/`), `/`) } //strings.Trim(c.Param(p), `/`)
 		s := parms[`s`]   //c.Param(`s`)   //getParam(`s`)   // source 平台 wy, mg, kw
 		id := parms[`id`] //c.Param(`id`) //getParam(`id`) // sid 音乐ID wy: songmid, mg: copyrightId
 		q := parms[`q`]   //c.Param(`q`)   //getParam(`q`)   // quality 音质 128k / 320k / flac / flac24bit
 		env.Loger.NewGroup(`LinkQuery`).Debug(`s: %v, id: %v, q: %v`, s, id, q)
-		if ztool.Chk_IsNil(s, q, id) {
+		if ztool.Chk_IsNilStr(s, q, id) {
 			return &resp.Resp{Code: 6, Msg: `参数不全`} // http.StatusBadRequest
 		}
 		cquery := caches.NewQuery(s, id, q)
+		// fmt.Printf("%+v\n", cquery)
+		defer cquery.Free()
 		// _, ok := sources.UseSource.Verify(cquery) // 获取请求音质 同时检测是否支持(如kw源没有flac24bit) qualitys[q][s]rquery
 		// if !ok {
 		// 	return &resp.Resp{Code: 6, Msg: `不支持的平台或音质`}
@@ -110,6 +107,7 @@ func linkHandler(c *gin.Context) {
 		clink, ok := env.Cache.Get(cquery.Query())
 		if ok {
 			if str, ok := clink.(string); ok {
+				env.Loger.NewGroup(`MemCache`).Debug(`MemHIT [%q]=>[%q]`, cquery.Query(), str)
 				if str == `` {
 					return &resp.Resp{Code: 2, Msg: `MemCache Reject`} // 拒绝请求，当前一段时间内解析出错
 				}
@@ -149,6 +147,7 @@ func linkHandler(c *gin.Context) {
 			}
 		}
 		// 无法获取直链 直接返回原链接
+		env.Cache.Set(cquery.Query(), outlink, 1200)
 		return &resp.Resp{Msg: CacheMISS, Data: outlink}
 	})
 }

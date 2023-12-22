@@ -3,6 +3,7 @@ package localcache
 import (
 	"errors"
 	"lx-source/src/caches"
+	"lx-source/src/env"
 	"net/url"
 	"os"
 	"strings"
@@ -16,7 +17,7 @@ type Cache struct {
 	state bool   // 激活状态
 }
 
-var loger = caches.Loger.AppGroup(`local`)
+var loger = env.Loger.NewGroup(`Caches`) //caches.Loger.AppGroup(`local`)
 
 func (c *Cache) getLink(q string) string {
 	return ztool.Str_FastConcat(c.Bind, `/file/`, q) // c.Addr + `file/` + q
