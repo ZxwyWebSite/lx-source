@@ -6,6 +6,7 @@ import (
 	"lx-source/src/env"
 	"lx-source/src/sources"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -26,7 +27,10 @@ var (
 	wy_pool = &sync.Pool{New: func() any { return new(FyApi_Song) }}
 	mg_pool = &sync.Pool{New: func() any { return new(MgApi_Song) }}
 	kw_pool = &sync.Pool{New: func() any { return new(KwApi_Song) }}
+	kg_pool = &sync.Pool{New: func() any { return new(KgApi_Song) }}
 )
+
+const errHttpReq = `无法连接解析接口`
 
 // 查询
 func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
@@ -50,7 +54,8 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 			if err != nil {
 				jx.Error(`HttpReq, Err: %s, ReTry: %v`, err, i)
 				if i > 3 {
-					msg = err.Error()
+					jx.Error(`Wy, HttpReq: %s`, err)
+					msg = errHttpReq //err.Error()
 					return
 				}
 				time.Sleep(time.Second)
@@ -64,13 +69,13 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 			return
 		}
 		var data = resp.Data[0]
-		if data.FreeTrialInfo != nil {
+		if data.Code != 200 || data.FreeTrialInfo != nil {
 			// jx.Error("发生错误, 返回数据:\n%#v", resp)
 			msg = `触发风控或专辑单独收费`
 			return
 		}
 		if data.Level != rquery {
-			msg = `实际音质不匹配`
+			msg = ztool.Str_FastConcat(`实际音质不匹配: `, rquery, ` <= `, data.Level) // 实际音质不匹配: exhigh <= standard
 			return
 		}
 		// jx.Info(`WyLink, RealQuality: %v`, data.Level)
@@ -83,7 +88,8 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 		// jx.Debug(`Mg, Url: %v`, url)
 		_, err := ztool.Net_HttpReq(http.MethodGet, url, nil, header_mg, &resp)
 		if err != nil {
-			msg = err.Error()
+			jx.Error(`Mg, HttpReq: %s`, err)
+			msg = errHttpReq //err.Error()
 			return
 		}
 		jx.Debug(`Mg, Resp: %+v`, resp)
@@ -100,7 +106,8 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 		// jx.Debug(`Kw, Url: %s`, url)
 		_, err := ztool.Net_HttpReq(http.MethodGet, url, nil, header_kw, &resp)
 		if err != nil {
-			msg = err.Error()
+			jx.Error(`Kw, HttpReq: %s`, err)
+			msg = errHttpReq //err.Error()
 			return
 		}
 		jx.Debug(`Kw, Resp: %+v`, resp)
@@ -110,6 +117,44 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 			return
 		}
 		outlink = strings.Split(resp.Data.URL, `?`)[0]
+	case s_kg:
+		resp := kg_pool.Get().(*KgApi_Song)
+		defer kg_pool.Put(resp)
+
+		sep := strings.Split(c.MusicID, `-`) // 分割 Hash-Album 如 6DC276334F56E22BE2A0E8254D332B45-13097991
+		alb := func() string {
+			if len(sep) >= 2 {
+				return sep[1]
+			}
+			return ``
+		}()
+		url := ztool.Str_FastConcat(api_kg, `&hash=`, sep[0], `&album_id=`, alb, `&_=`, strconv.FormatInt(time.Now().UnixMilli(), 10))
+		jx.Debug(`Kg, Url: %s`, url)
+		_, err := ztool.Net_HttpReq(http.MethodGet, url, nil, nil, &resp)
+		if err != nil {
+			jx.Error(`Kg, HttpReq: %s`, err)
+			msg = errHttpReq //err.Error()
+			return
+		}
+		jx.Debug(`Kw, Resp: %+v`, resp)
+		if resp.ErrCode != 0 {
+			msg = ztool.Str_FastConcat(`Error: `, strconv.Itoa(resp.ErrCode))
+			return
+		}
+		var data KgApi_Data
+		err = ztool.Val_MapToStruct(resp.Data, &data)
+		if err != nil {
+			msg = err.Error()
+			return
+		}
+		if data.PlayURL == `` {
+			if data.PlayBackupURL == `` {
+				msg = `无法获取试听链接`
+				return
+			}
+			outlink = data.PlayBackupURL
+		}
+		outlink = data.PlayURL
 	default:
 		msg = `不支持的平台`
 		return

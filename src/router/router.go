@@ -77,9 +77,12 @@ func InitRouter() *gin.Engine {
 
 // 数据返回格式
 const (
-	CacheHIT  = `Cache HIT`   // 缓存已命中
-	CacheMISS = `Cache MISS`  // 缓存未命中
-	CacheSet  = `Cache Seted` // 缓存已设置
+	cacheHIT  = `Cache HIT`   // 缓存已命中
+	cacheMISS = `Cache MISS`  // 缓存未命中
+	cacheSet  = `Cache Seted` // 缓存已设置
+
+	memHIT = `Memory HIT`    // 内存已命中
+	memRej = `Memory Reject` // 内存已拒绝
 )
 
 // 外链解析
@@ -109,9 +112,9 @@ func linkHandler(c *gin.Context) {
 			if str, ok := clink.(string); ok {
 				env.Loger.NewGroup(`MemCache`).Debug(`MemHIT [%q]=>[%q]`, cquery.Query(), str)
 				if str == `` {
-					return &resp.Resp{Code: 2, Msg: `MemCache Reject`} // 拒绝请求，当前一段时间内解析出错
+					return &resp.Resp{Code: 2, Msg: memRej} // 拒绝请求，当前一段时间内解析出错 `MemCache Reject`
 				}
-				return &resp.Resp{Msg: `MemCache HIT`, Data: str}
+				return &resp.Resp{Msg: memHIT, Data: str} // `MemCache HIT`
 			}
 		}
 		// 查询缓存
@@ -124,7 +127,7 @@ func linkHandler(c *gin.Context) {
 			sc.Debug(`Method: Get, Query: %v`, cquery.Query())
 			if link := caches.UseCache.Get(cquery); link != `` {
 				env.Cache.Set(cquery.Query(), link, 3600)
-				return &resp.Resp{Msg: CacheHIT, Data: link}
+				return &resp.Resp{Msg: cacheHIT, Data: link}
 			}
 		} else {
 			sc.Debug(`Disabled`)
@@ -139,15 +142,15 @@ func linkHandler(c *gin.Context) {
 			return &resp.Resp{Code: 2, Msg: emsg}
 		}
 		// 缓存并获取直链
-		if outlink != `` && cstat {
+		if outlink != `` && cstat && cquery.Source != `kg` {
 			sc.Debug(`Method: Set, Link: %v`, outlink)
 			if link := caches.UseCache.Set(cquery, outlink); link != `` {
 				env.Cache.Set(cquery.Query(), link, 3600)
-				return &resp.Resp{Msg: CacheSet, Data: link}
+				return &resp.Resp{Msg: cacheSet, Data: link}
 			}
 		}
 		// 无法获取直链 直接返回原链接
 		env.Cache.Set(cquery.Query(), outlink, 1200)
-		return &resp.Resp{Msg: CacheMISS, Data: outlink}
+		return &resp.Resp{Msg: cacheMISS, Data: outlink}
 	})
 }

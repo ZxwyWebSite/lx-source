@@ -87,6 +87,7 @@ func init() {
 	// logs.DefLogger(`LX-SOURCE`, logs.LevelDebu)
 	// logs.Main = `LX-SOURCE`
 	env.Cfg.MustInit(confPath) //conf.InitConfig(confPath)
+	// fmt.Printf("%+v\n", env.Config)
 	env.Loger.NewGroup(`ServHello`).Info(`欢迎使用 LX-SOURCE 洛雪音乐自定义源`)
 	if !env.Config.Main.Debug {
 		gin.SetMode(gin.ReleaseMode)

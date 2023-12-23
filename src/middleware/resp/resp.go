@@ -36,6 +36,8 @@ var statusMap = map[int]int{
 	6: http.StatusBadRequest,          // 参数错误
 }
 
+var ErrMp3 = `https://r2eu.zw-cdn.tk/gh/lx-source/static/error.mp3`
+
 // 返回请求
 /*
  注：Code不为0时调用c.Abort()终止Handler
@@ -47,7 +49,7 @@ func (o *Resp) Execute(c *gin.Context) {
 	}
 	if o.Code != 0 {
 		if o.Code == 2 /*&& o.Data == ``*/ {
-			o.Data = `https://r2eu.zw-cdn.tk/gh/lx-source/static/error.mp3`
+			o.Data = ErrMp3
 		}
 		c.Abort()
 	}

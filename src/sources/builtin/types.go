@@ -76,6 +76,53 @@ type (
 		ProfileID string `json:"profileId"`
 		CurTime   int64  `json:"curTime"`
 	}
+	// 酷狗试听接口
+	KgApi_Song struct {
+		Status  int `json:"status"`
+		ErrCode int `json:"err_code"`
+		Data    any `json:"data"`
+	}
+	KgApi_Data struct {
+		// Hash       string `json:"hash"`
+		// Timelength int    `json:"timelength"`
+		// Filesize   int    `json:"filesize"`
+		// AudioName  string `json:"audio_name"`
+		// HaveAlbum  int    `json:"have_album"`
+		// AlbumName  string `json:"album_name"`
+		// AlbumID    any    `json:"album_id"`
+		// Img        string `json:"img"`
+		// HaveMv     int    `json:"have_mv"`
+		// VideoID    any    `json:"video_id"`
+		// AuthorName string `json:"author_name"`
+		// SongName   string `json:"song_name"`
+		// Lyrics     string `json:"lyrics"`
+		// AuthorID   any    `json:"author_id"`
+		// Privilege  int    `json:"privilege"`
+		// Privilege2 string `json:"privilege2"`
+		PlayURL string `json:"play_url"`
+		// Authors    []struct {
+		// 	AuthorID      any    `json:"author_id"`
+		// 	AuthorName    string `json:"author_name"`
+		// 	IsPublish     string `json:"is_publish"`
+		// 	SizableAvatar string `json:"sizable_avatar"`
+		// 	EAuthorID     string `json:"e_author_id"`
+		// 	Avatar        string `json:"avatar"`
+		// } `json:"authors"`
+		// IsFreePart         int    `json:"is_free_part"`
+		// Bitrate            int    `json:"bitrate"`
+		// RecommendAlbumID   string `json:"recommend_album_id"`
+		// StoreType          string `json:"store_type"`
+		// AlbumAudioID       int    `json:"album_audio_id"`
+		// IsPublish          int    `json:"is_publish"`
+		// EAuthorID          string `json:"e_author_id"`
+		// AudioID            any    `json:"audio_id"`
+		// HasPrivilege       bool   `json:"has_privilege"`
+		PlayBackupURL string `json:"play_backup_url"`
+		// SmallLibrarySong   int    `json:"small_library_song"`
+		// EncodeAlbumID      string `json:"encode_album_id"`
+		// EncodeAlbumAudioID string `json:"encode_album_audio_id"`
+		// EVideoID           string `json:"e_video_id"`
+	}
 )
 
 const (
@@ -83,7 +130,7 @@ const (
 	s_wy = `wy`
 	s_mg = `mg`
 	s_kw = `kw`
-	// s_kg = `kg`
+	s_kg = `kg`
 	// s_tx = `tx`
 	// s_lx = `lx`
 )
@@ -95,6 +142,7 @@ var (
 			s_wy: `standard`,
 			s_mg: `1`,
 			s_kw: `128k`,
+			s_kg: `128k`,
 		},
 		`320k`: {
 			s_wy: `exhigh`,
@@ -119,6 +167,7 @@ var (
 	api_wy string
 	api_mg string
 	api_kw string
+	api_kg string = `https://wwwapi.kugou.com/yy/index.php?r=play/getdata&platid=4&mid=1`
 	// Headers
 	header_wy map[string]string
 	header_mg map[string]string

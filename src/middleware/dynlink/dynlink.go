@@ -4,11 +4,10 @@ import (
 	"lx-source/src/caches"
 	"lx-source/src/caches/localcache"
 	"lx-source/src/env"
+	"lx-source/src/middleware/util"
+	"net/http"
 
-	// "lx-source/src/middleware/util"
-	// "net/http"
-
-	// "github.com/ZxwyWebSite/ztool"
+	"github.com/ZxwyWebSite/ztool"
 	"github.com/gin-gonic/gin"
 )
 
@@ -17,14 +16,13 @@ type DynLink struct {
 	Link string
 }
 
-func LoadHandler(r *gin.Engine) {
-	loger := env.Loger.NewGroup(`DynLink`)
-	if cache, ok := caches.UseCache.(*localcache.Cache); ok {
-		loger.Debug(`UseStatic`)
-		r.Static(`/file`, cache.Path)
-	}
-	// 动态链暂未完成...
-}
+// var ExLink func(string) string = func(s string) string { return s }
+
+// func localInit(c string) func(string) string {
+// 	return func(l string) string {
+// 		return ztool.Str_FastConcat(c, `/`, l)
+// 	}
+// }
 
 // Doc 动态链
 /*
@@ -38,6 +36,7 @@ func LoadHandler(r *gin.Engine) {
     + Data2 直链缓存
     - key: "20231221/1703176257/6c782f303030303030303030312f3332306b.mp3"
     - val: "&DynLink{Mode: 0, Link: 'cache/lx/0000000001/320k'}"
+	+ 返回链接: "http://127.0.0.1/file/lx/0000000001/320k.mp3"
  2. 查询缓存
     - key: "20231221/1703176257/6c782f303030303030303030312f3332306b.mp3"
     - val: "&DynLink{Mode: 0, Link: 'cache/lx/0000000001/320k'}"
@@ -51,6 +50,36 @@ func LoadHandler(r *gin.Engine) {
  0. 实现思路
 
 */
+
+func LoadHandler(r *gin.Engine) {
+	loger := env.Loger.NewGroup(`DynLink`)
+	cache, cok := caches.UseCache.(*localcache.Cache)
+	// env.Cache.Set(`date/second/fname.mp3`, DynLink{Mode: 0, Link: `wy/3203127/320k.mp3`}, 0)
+	// env.Cache.Set(`date/second/lname.mp3`, DynLink{Mode: 1, Link: `https://r2eu.zxwy.link/gh/lx-source/static/error.mp3`}, 0)
+	// 动态链已完成(beta)...
+	if env.Config.Cache.LinkMode == `dynamic` || env.Config.Cache.LinkMode == `2` /*|| true*/ {
+		loger.Debug(`UseDynamic`)
+		r.GET(`/file/:t/:x/:f`, func(c *gin.Context) {
+			parms := util.ParaMap(c)
+			t, x, f := parms[`t`], parms[`x`], parms[`f`]
+			if clink, ok := env.Cache.Get(ztool.Str_FastConcat(t, `/`, x, `/`, f)); ok {
+				if dyn, ok := clink.(DynLink); ok {
+					if dyn.Mode == 0 && cok {
+						c.File(ztool.Str_FastConcat(cache.Path, `/`, dyn.Link))
+						return
+					}
+					c.Redirect(http.StatusFound, dyn.Link)
+					return
+				}
+			}
+			c.AbortWithStatus(http.StatusNotFound)
+		})
+	} else if cok {
+		loger.Debug(`UseStatic`)
+		// ExLink = localInit(cache.Path)
+		r.Static(`/file`, cache.Path)
+	}
+}
 
 // func FileHandler() gin.HandlerFunc {
 // 	loger := env.Loger.NewGroup(`DynLink`)

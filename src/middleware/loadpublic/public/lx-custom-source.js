@@ -47,7 +47,9 @@ const httpRequest = (url, options) => new Promise((resolve, reject) => {
 const musicUrl = async (source, info, quality) => {
   const start = new Date().getTime();
   const id = info.hash ?? info.copyrightId ?? info.songmid // 音乐id kg源为hash, mg源为copyrightId
-  const query = `${source}/${id}/${quality}`; console.log('创建任务: %s, 音乐信息: %O', query, info)
+  const album = source == 'kg' && info.albumId != void 0 ? '-' + info.albumId : ''
+  const query = `${source}/${id}${album}/${quality}`
+  console.log('创建任务: %s, 音乐信息: %O', query, info)
   const body = await httpRequest(`${apiaddr}link/${query}`, { method: 'get' });
   console.log('返回数据: %O', body, `, 耗时 ${new Date().getTime() - start} ms`)
   return body.data != '' ? body.data : Promise.reject(body.msg) // 没有获取到链接则将msg作为错误抛出
@@ -106,6 +108,8 @@ const init = () => {
             // ...defs, qualitys: source[v].qualitys, // 支持返回音质时启用 使用后端音质表
           }
         }
+        sourcess['kg'] = { name: '酷狗试听', ...defaults }
+        sourcess['kg'].qualitys = ['128k']
       })
       // 完成初始化
       stat = true

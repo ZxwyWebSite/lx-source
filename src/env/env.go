@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	Version = `1.0.2-β0.4`
+	Version = `1.0.2-b0.5`
 )
 
 var (
@@ -79,19 +79,19 @@ type (
 		Cloud_Path string `comment:"Cloudreve存储路径"`
 	}
 	Conf struct {
-		Main   *Conf_Main   `comment:"程序主配置"`
-		Apis   *Conf_Apis   `comment:"接口设置"`
-		Auth   *Conf_Auth   `comment:"访问控制"`
-		Source *Conf_Source `comment:"解析源配置"`
-		Script *Conf_Script `comment:"自定义脚本更新"` // ini:",omitempty"
-		Cache  *Conf_Cache  `comment:"音乐缓存设置"`
+		Main   Conf_Main   `comment:"程序主配置"`
+		Apis   Conf_Apis   `comment:"接口设置"`
+		Auth   Conf_Auth   `comment:"访问控制"`
+		Source Conf_Source `comment:"解析源配置"`
+		Script Conf_Script `comment:"自定义脚本更新"` // ini:",omitempty"
+		Cache  Conf_Cache  `comment:"音乐缓存设置"`
 	}
 )
 
 var (
 	// 默认配置
 	defCfg = Conf{
-		Main: &Conf_Main{
+		Main: Conf_Main{
 			Debug:   false,
 			Listen:  `0.0.0.0:1011`,
 			Gzip:    false,
@@ -99,10 +99,10 @@ var (
 			Print:   true,
 			SysLev:  false,
 		},
-		Apis: &Conf_Apis{
+		Apis: Conf_Apis{
 			// BindAddr: `http://192.168.10.22:1011/`,
 		},
-		Auth: &Conf_Auth{
+		Auth: Conf_Auth{
 			ApiKey_Enable:    true,
 			RateLimit_Enable: false,
 			RateLimit_Global: 1,
@@ -110,21 +110,21 @@ var (
 			BanList_Mode:     `off`,
 			BanList_White:    []string{`127.0.0.1`},
 		},
-		Source: &Conf_Source{
+		Source: Conf_Source{
 			Mode:          `builtin`,
 			FakeIP_Mode:   `0`,
 			FakeIP_Value:  `192.168.10.2`,
 			Proxy_Enable:  false,
 			Proxy_Address: `{protocol}://({user}:{password})@{address}:{port}`,
 		},
-		Script: &Conf_Script{
+		Script: Conf_Script{
 			Log: `发布更新 (请删除旧源后重新导入)：进行了部分优化，修复了部分Bug`, // 更新日志
 
 			Ver:   `1.0.1`,               // 自定义脚本版本
 			Url:   `lx-custom-source.js`, // 脚本下载地址
 			Force: false,                 // 强制推送更新
 		},
-		Cache: &Conf_Cache{
+		Cache: Conf_Cache{
 			Mode:       `local`, // 缓存模式
 			LinkMode:   `1`,
 			Local_Path: `data/cache`,
