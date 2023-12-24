@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	Version = `1.0.2-b0.5`
+	Version = `1.0.2-b0.6`
 )
 
 var (
@@ -120,9 +120,9 @@ var (
 		Script: Conf_Script{
 			Log: `发布更新 (请删除旧源后重新导入)：进行了部分优化，修复了部分Bug`, // 更新日志
 
-			Ver:   `1.0.1`,               // 自定义脚本版本
+			Ver:   `1.0.3`,               // 自定义脚本版本
 			Url:   `lx-custom-source.js`, // 脚本下载地址
-			Force: false,                 // 强制推送更新
+			Force: true,                  // 强制推送更新
 		},
 		Cache: Conf_Cache{
 			Mode:       `local`, // 缓存模式

@@ -28,9 +28,13 @@ var (
 	mg_pool = &sync.Pool{New: func() any { return new(MgApi_Song) }}
 	kw_pool = &sync.Pool{New: func() any { return new(KwApi_Song) }}
 	kg_pool = &sync.Pool{New: func() any { return new(KgApi_Song) }}
+	tx_pool = &sync.Pool{New: func() any { return new(res_tx) }}
 )
 
-const errHttpReq = `无法连接解析接口`
+const (
+	errHttpReq = `无法连接解析接口`
+	errNoLink  = `无法获取试听链接`
+)
 
 // 查询
 func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
@@ -129,7 +133,7 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 			return ``
 		}()
 		url := ztool.Str_FastConcat(api_kg, `&hash=`, sep[0], `&album_id=`, alb, `&_=`, strconv.FormatInt(time.Now().UnixMilli(), 10))
-		jx.Debug(`Kg, Url: %s`, url)
+		// jx.Debug(`Kg, Url: %s`, url)
 		_, err := ztool.Net_HttpReq(http.MethodGet, url, nil, nil, &resp)
 		if err != nil {
 			jx.Error(`Kg, HttpReq: %s`, err)
@@ -147,14 +151,39 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 			msg = err.Error()
 			return
 		}
-		if data.PlayURL == `` {
-			if data.PlayBackupURL == `` {
-				msg = `无法获取试听链接`
+		if data.PlayBackupURL == `` {
+			if data.PlayURL == `` {
+				msg = errNoLink
 				return
 			}
-			outlink = data.PlayBackupURL
+			outlink = data.PlayURL
 		}
-		outlink = data.PlayURL
+		outlink = data.PlayBackupURL
+	case s_tx:
+		resp := tx_pool.Get().(*res_tx)
+		defer tx_pool.Put(resp)
+
+		url := ztool.Str_FastConcat(api_tx,
+			`{"comm":{"ct":24,"cv":0,"format":"json","uin":"10086"},"req":{"method":"GetCdnDispatch","module":"CDN.SrfCdnDispatchServer","param":{"calltype":0,"guid":"1535153710","userip":""}},"req_0":{"method":"CgiGetVkey","module":"vkey.GetVkeyServer","param":{"guid":"1535153710","loginflag":1,"platform":"20","songmid":["`,
+			c.MusicID, `"],"songtype":[0],"uin":"10086"}}}`,
+		)
+		// jx.Debug(`Tx, Url: %s`, url)
+		out, err := ztool.Net_HttpReq(http.MethodGet, url, nil, header_tx, &resp)
+		if err != nil {
+			jx.Error(`Tx, HttpReq: %s`, err)
+			msg = errHttpReq
+			return
+		}
+		jx.Debug(`Tx, Resp: %s`, out)
+		if resp.Code != 0 {
+			msg = ztool.Str_FastConcat(`Error: `, strconv.Itoa(resp.Code))
+			return
+		}
+		if resp.Req0.Data.Midurlinfo[0].Purl == `` {
+			msg = errNoLink
+			return
+		}
+		outlink = ztool.Str_FastConcat(`https://dl.stream.qqmusic.qq.com/`, resp.Req0.Data.Midurlinfo[0].Purl)
 	default:
 		msg = `不支持的平台`
 		return

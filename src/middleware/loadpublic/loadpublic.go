@@ -22,12 +22,12 @@ func LoadPublic(r *gin.Engine) {
 	pf := env.Loger.NewGroup(`PublicFS`)
 	var httpFS http.FileSystem
 	dir := ztool.Str_FastConcat(env.RunPath, `/data/public`)
+	publicFS, err := fs.Sub(publicEM, `public`)
+	if err != nil {
+		pf.Fatal(`内置Public目录载入错误: %s, 请尝试重新编译`, err)
+	}
 	if !ztool.Fbj_IsExists(dir) {
 		pf.Info(`不存在Public目录, 释放默认静态文件`)
-		publicFS, err := fs.Sub(publicEM, `public`)
-		if err != nil {
-			pf.Fatal(`内置Public目录载入错误: %s, 请尝试重新编译`, err)
-		}
 		walk := func(relPath string, d fs.DirEntry, err error) error {
 			if err != nil {
 				return fmt.Errorf(`无法获取[%q]的信息: %s`, relPath, err)
@@ -63,6 +63,8 @@ func LoadPublic(r *gin.Engine) {
 		switch file {
 		case `favicon.ico`:
 			c.FileFromFS(`icon.ico`, httpFS)
+		case `lx-custom-source.js`:
+			c.FileFromFS(`lx-custom-source.js`, http.FS(publicFS))
 		default:
 			c.FileFromFS(file, httpFS)
 		}

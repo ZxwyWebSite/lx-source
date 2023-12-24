@@ -7,18 +7,19 @@
  */
 
 // 脚本配置
-const version = '1.0.2' // 脚本版本
+const version = '1.0.3' // 脚本版本
 const apiaddr = 'http://127.0.0.1:1011/' // 服务端地址，末尾加斜杠
 const apipass = '' // 验证密钥，由服务端自动生成 '${apipass}'
 const devmode = true // 调试模式
 
 // 常量 & 默认值
 const { EVENT_NAMES, request, on, send } = window.lx ?? globalThis.lx
-const defaults = {
-  type: 'music', // 目前固定为 music
-  actions: ['musicUrl'], // 目前固定为 ['musicUrl']
-  qualitys: ['128k', '320k', 'flac', 'flac24bit'], // 当前脚本的该源所支持获取的Url音质，有效的值有：['128k', '320k', 'flac', 'flac24bit']
-}
+const defs = { type: 'music', actions: ['musicUrl'] }
+// const defaults = {
+//   type: 'music', // 目前固定为 music
+//   actions: ['musicUrl'], // 目前固定为 ['musicUrl']
+//   qualitys: ['128k', '320k', 'flac', 'flac24bit'], // 当前脚本的该源所支持获取的Url音质，有效的值有：['128k', '320k', 'flac', 'flac24bit']
+// }
 const defheaders = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.84 Safari/537.36 HBPC/12.1.2.300',
   'Accept': 'application/json, text/plain, */*',
@@ -99,17 +100,14 @@ const init = () => {
       }
       // 激活可用源
       const source = body.source // 定位到Source部分
-      // const defs = { type: 'music', actions: ['musicUrl'] }
       Object.keys(source).forEach(v => {
-        if (source[v] == true) {
+        if (source[v] != null /*== true*/) {
           sourcess[v] = {
             name: v,
-            ...defaults,
-            // ...defs, qualitys: source[v].qualitys, // 支持返回音质时启用 使用后端音质表
+            ...defs, // ...defaults,
+            qualitys: source[v], // 支持返回音质时启用 使用后端音质表
           }
         }
-        sourcess['kg'] = { name: '酷狗试听', ...defaults }
-        sourcess['kg'].qualitys = ['128k']
       })
       // 完成初始化
       stat = true

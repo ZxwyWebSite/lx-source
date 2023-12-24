@@ -16,6 +16,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+var (
+	// 默认音质
+	defQuality = []string{`128k`, `320k`, `flac`, `flac24bit`}
+	// 试听音质
+	tstQuality = []string{`128k`}
+)
+
 // 载入路由
 func InitRouter() *gin.Engine {
 	r := gin.Default()
@@ -34,14 +41,14 @@ func InitRouter() *gin.Engine {
 			`github`: `https://github.com/ZxwyWebSite/lx-source`,
 			// 可用平台
 			`source`: gin.H{
-				`mg`: true,
-				`wy`: true,
-				`kg`: []string{`128k`, `320k`}, // 测试结构2, 启用时返回音质列表, 禁用为false
-				`tx`: gin.H{ // "测试结构 不代表最终方式"
-					`enable`:   false,
-					`qualitys`: []string{`128k`, `320k`, `flac`, `flac24bit`},
-				},
-				`kw`: true,
+				`mg`: defQuality, //true,
+				`wy`: defQuality, //true,
+				`kg`: tstQuality, //[]string{`128k`, `320k`}, // 测试结构2, 启用时返回音质列表, 禁用为false
+				`tx`: tstQuality, //gin.H{ // "测试结构 不代表最终方式"
+				// 	`enable`:   false,
+				// 	`qualitys`: []string{`128k`, `320k`, `flac`, `flac24bit`},
+				// },
+				`kw`: []string{`128k`, `320k`, `flac`}, //true,
 			},
 			// 自定义源脚本更新
 			`script`: env.Config.Script,
@@ -142,7 +149,7 @@ func linkHandler(c *gin.Context) {
 			return &resp.Resp{Code: 2, Msg: emsg}
 		}
 		// 缓存并获取直链
-		if outlink != `` && cstat && cquery.Source != `kg` {
+		if outlink != `` && cstat && !ztool.Chk_IsMatch(cquery.Source, `kg`, `tx`) {
 			sc.Debug(`Method: Set, Link: %v`, outlink)
 			if link := caches.UseCache.Set(cquery, outlink); link != `` {
 				env.Cache.Set(cquery.Query(), link, 3600)
