@@ -1,6 +1,7 @@
 package caches
 
 import (
+	"strings"
 	"sync"
 
 	"github.com/ZxwyWebSite/ztool"
@@ -51,7 +52,7 @@ func (c *Query) Free() { c.query = ``; query_pool.Put(c) }
 
 // 根据音质判断文件后缀
 func rext(q string) string {
-	if q == `128k` || q == `320k` {
+	if ztool.Chk_IsMatch(q, `128k`, `320k`) /*q == `128k` || q == `320k`*/ {
 		return `mp3`
 	}
 	return `flac`
@@ -79,6 +80,19 @@ func (c *Query) Query() string {
 		c.query = ztool.Str_FastConcat(c.Source, `/`, c.MusicID, `/`, c.Quality, `.`, c.Extname)
 	}
 	return c.query
+}
+
+// 分割查询字符串
+/*
+ kg: 分割 Hash-Album 如 "6DC276334F56E22BE2A0E8254D332B45-13097991"
+ tx: 分割 songmid-strMediaMid 如 "002fktJg3cmSpC-000V6uuv35Cwnh"
+*/
+func (c *Query) Split() []string {
+	sep := strings.Split(c.MusicID, `-`)
+	if len(sep) >= 2 {
+		return sep
+	}
+	return append(sep, ``)
 }
 
 // 初始化缓存

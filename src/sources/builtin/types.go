@@ -216,32 +216,39 @@ const (
 
 var (
 	// 音质列表 ( [通用音质][音乐平台]对应音质 )
+	/*
+	 注: kg源使用对应hash匹配音质，故为空
+	*/
 	qualitys = map[string]map[string]string{
 		`128k`: {
 			s_wy: `standard`,
 			s_mg: `1`,
 			s_kw: `128k`,
 			s_kg: ``,
-			s_tx: ``,
+			s_tx: `M500`,
 		},
 		`320k`: {
 			s_wy: `exhigh`,
 			s_mg: `2`,
 			s_kw: `320k`,
+			// s_kg: ``,
+			// s_tx: `M800`,
 		},
 		`flac`: {
 			s_wy: `lossless`,
 			s_mg: `3`,
 			s_kw: `2000k`,
+			// s_tx: `F000`,
 		},
 		`flac24bit`: {
 			s_wy: `hires`,
 			s_mg: `4`,
+			// s_tx: `RS01`,
 		},
-		`fl24`: {
-			s_wy: `hires`,
-			s_mg: `4`,
-		},
+		// `fl24`: {
+		// 	s_wy: `hires`,
+		// 	s_mg: `4`,
+		// },
 	}
 	// ApiAddr
 	api_wy string

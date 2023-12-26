@@ -125,14 +125,15 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 		resp := kg_pool.Get().(*KgApi_Song)
 		defer kg_pool.Put(resp)
 
-		sep := strings.Split(c.MusicID, `-`) // 分割 Hash-Album 如 6DC276334F56E22BE2A0E8254D332B45-13097991
-		alb := func() string {
-			if len(sep) >= 2 {
-				return sep[1]
-			}
-			return ``
-		}()
-		url := ztool.Str_FastConcat(api_kg, `&hash=`, sep[0], `&album_id=`, alb, `&_=`, strconv.FormatInt(time.Now().UnixMilli(), 10))
+		// sep := strings.Split(c.MusicID, `-`) // 分割 Hash-Album 如 6DC276334F56E22BE2A0E8254D332B45-13097991
+		// alb := func() string {
+		// 	if len(sep) >= 2 {
+		// 		return sep[1]
+		// 	}
+		// 	return ``
+		// }()
+		sep := c.Split()
+		url := ztool.Str_FastConcat(api_kg, `&hash=`, sep[0], `&album_id=`, sep[1], `&_=`, strconv.FormatInt(time.Now().UnixMilli(), 10))
 		// jx.Debug(`Kg, Url: %s`, url)
 		_, err := ztool.Net_HttpReq(http.MethodGet, url, nil, nil, &resp)
 		if err != nil {
@@ -163,9 +164,16 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 		resp := tx_pool.Get().(*res_tx)
 		defer tx_pool.Put(resp)
 
+		sep := c.Split()
 		url := ztool.Str_FastConcat(api_tx,
-			`{"comm":{"ct":24,"cv":0,"format":"json","uin":"10086"},"req":{"method":"GetCdnDispatch","module":"CDN.SrfCdnDispatchServer","param":{"calltype":0,"guid":"1535153710","userip":""}},"req_0":{"method":"CgiGetVkey","module":"vkey.GetVkeyServer","param":{"guid":"1535153710","loginflag":1,"platform":"20","songmid":["`,
-			c.MusicID, `"],"songtype":[0],"uin":"10086"}}}`,
+			`{"comm":{"ct":24,"cv":0,"format":"json","uin":"10086"},"req":{"method":"GetCdnDispatch","module":"CDN.SrfCdnDispatchServer","param":{"calltype":0,"guid":"1535153710","userip":""}},"req_0":{"method":"CgiGetVkey","module":"vkey.GetVkeyServer","param":{`,
+			func(s string) string {
+				if s == `` {
+					return ``
+				}
+				return ztool.Str_FastConcat(`"filename":["`, rquery, s, `.`, c.Extname, `"],`)
+			}(sep[1]),
+			`"guid":"1535153710","loginflag":1,"platform":"20","songmid":["`, sep[0], `"],"songtype":[0],"uin":"10086"}}}`,
 		)
 		// jx.Debug(`Tx, Url: %s`, url)
 		out, err := ztool.Net_HttpReq(http.MethodGet, url, nil, header_tx, &resp)

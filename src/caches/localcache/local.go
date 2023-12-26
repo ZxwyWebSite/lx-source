@@ -40,11 +40,26 @@ func (c *Cache) Get(q *caches.Query) string {
 }
 
 func (c *Cache) Set(q *caches.Query, l string) string {
-	err := ztool.Net_DownloadFile(l, ztool.Str_FastConcat(c.Path, `/`, q.Query()), nil)
+	fpath := ztool.Str_FastConcat(c.Path, `/`, q.Query())
+	// if env.Config.Main.FFConv && q.Source == `kg` { // ztool.Chk_IsMatch(q.Source, `kg`)
+	// 	err := ztool.Fbj_MkdirAll(fpath, 0644)
+	// 	if err != nil {
+	// 		loger.Error(`DownloadFile_Mkdir: %v`, err)
+	// 		return ``
+	// 	}
+	// 	out, err := ztool.Cmd_aWaitExec(ztool.Str_FastConcat(`ffmpeg -i "`, l, `" -vn`, ` -c:a copy`, ` "`, fpath, `"`))
+	// 	if err != nil {
+	// 		loger.Error(`DownloadFile_Exec: %v, Output: %v`, err, out)
+	// 		return ``
+	// 	}
+	// 	loger.Debug(`FFMpeg_Out: %v`, out)
+	// } else {
+	err := ztool.Net_DownloadFile(l, fpath, nil)
 	if err != nil {
 		loger.Error(`DownloadFile: %v`, err)
 		return ``
 	}
+	// }
 	// env.Cache.Set(q.Query(), struct{}{}, 3600)
 	return c.getLink(q.Query())
 	// fpath := filepath.Join(c.Path, q.String)

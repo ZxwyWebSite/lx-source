@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	Version = `1.0.2-b0.6`
+	Version = `1.0.2-b0.7`
 )
 
 var (
@@ -30,6 +30,7 @@ type (
 		LogPath string `comment:"文件日志路径，不填禁用"`
 		Print   bool   `comment:"控制台输出"`
 		SysLev  bool   `comment:"(实验性) 设置进程高优先级"`
+		// FFConv  bool   `comment:"(实验性) 使用FFMpeg修复音频(本地缓存)"`
 	}
 	Conf_Apis struct {
 		// BindAddr string `comment:"外部访问地址，用于生成文件链接"`
