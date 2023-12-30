@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	Version = `1.0.2-b0.7`
+	Version = `1.0.2-b0.8`
 )
 
 var (
@@ -33,6 +33,7 @@ type (
 		// FFConv  bool   `comment:"(实验性) 使用FFMpeg修复音频(本地缓存)"`
 	}
 	Conf_Apis struct {
+		// 预留：后期可能会出一个WebUI，/webui，相关设置
 		// BindAddr string `comment:"外部访问地址，用于生成文件链接"`
 		// LxM_Auth string `comment:"验证Key，自动生成，填写null禁用"`
 	}
@@ -41,9 +42,11 @@ type (
 		ApiKey_Enable bool   `comment:"是否开启Key验证"`
 		ApiKey_Value  string `comment:"验证Key值，留空自动生成"`
 		// 速率限制
-		RateLimit_Enable bool `comment:"是否开启速率限制"`
-		RateLimit_Global int  `comment:"全局速率限制，单位秒"`
-		RateLimit_Single int  `comment:"单IP速率限制，单位秒"`
+		RateLimit_Enable bool   `comment:"是否开启速率限制"`
+		RateLimit_Block  uint32 `comment:"检测范围，每分区为x秒"` // 每x秒一个分区
+		RateLimit_Global uint32 `comment:"全局速率限制，单位次每x秒(暂未开放)"`
+		RateLimit_Single uint32 `comment:"单IP速率限制，单位次每x秒"`
+		// RateLimit_BanNum uint32 `commemt:"容忍限度，超出限制N倍后封禁"`
 		// 黑白名单
 		BanList_Mode  string   `comment:"名单模式 0: off(关闭), 1: white(白名单), 2: black(黑名单)"`
 		BanList_White []string `comment:"host白名单"`
@@ -106,8 +109,9 @@ var (
 		Auth: Conf_Auth{
 			ApiKey_Enable:    true,
 			RateLimit_Enable: false,
+			RateLimit_Block:  30,
 			RateLimit_Global: 1,
-			RateLimit_Single: 5,
+			RateLimit_Single: 15,
 			BanList_Mode:     `off`,
 			BanList_White:    []string{`127.0.0.1`},
 		},
