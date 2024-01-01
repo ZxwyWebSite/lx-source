@@ -23,9 +23,32 @@ var (
 	tstQuality = []string{`128k`}
 )
 
+// 自动生成支持的音质表
+func loadQMap() [][]string {
+	m := make([][]string, 6)
+	// 0.wy
+	m[0] = defQuality
+	// 1.mg
+	m[1] = defQuality
+	// 2.kw
+	m[2] = []string{`128k`, `320k`, `flac`}
+	// 3.kg
+	m[3] = tstQuality
+	// 4.tx
+	if env.Config.Custom.Tx_Enable {
+		m[4] = defQuality
+	} else {
+		m[4] = tstQuality
+	}
+	// 5.lx
+	// m[sources.S_lx] = defQuality
+	return m
+}
+
 // 载入路由
 func InitRouter() *gin.Engine {
 	r := gin.Default()
+	qmap := loadQMap()
 	// Gzip压缩
 	if env.Config.Main.Gzip {
 		r.Use(gzip.Gzip(gzip.DefaultCompression, gzip.WithExcludedPaths([]string{"/file/"})))
@@ -41,14 +64,15 @@ func InitRouter() *gin.Engine {
 			`github`: `https://github.com/ZxwyWebSite/lx-source`,
 			// 可用平台
 			`source`: gin.H{
-				`mg`: defQuality, //true,
-				`wy`: defQuality, //true,
-				`kg`: tstQuality, //[]string{`128k`, `320k`}, // 测试结构2, 启用时返回音质列表, 禁用为false
-				`tx`: tstQuality, //gin.H{ // "测试结构 不代表最终方式"
+				`wy`: qmap[0], //true,
+				`mg`: qmap[1], //true,
+				`kw`: qmap[2], //true,
+				`kg`: qmap[3], //[]string{`128k`, `320k`}, // 测试结构2, 启用时返回音质列表, 禁用为false
+				`tx`: qmap[4], //gin.H{ // "测试结构 不代表最终方式"
 				// 	`enable`:   false,
 				// 	`qualitys`: []string{`128k`, `320k`, `flac`, `flac24bit`},
 				// },
-				`kw`: []string{`128k`, `320k`, `flac`}, //true,
+				sources.S_lx: qmap[5],
 			},
 			// 自定义源脚本更新
 			`script`: env.Config.Script,
@@ -67,6 +91,11 @@ func InitRouter() *gin.Engine {
 	// }
 	// if env.Config.Cache.Mode == `local` {
 	// 	r.Static(`/file`, env.Config.Cache.Local_Path)
+	// }
+	// 软件接口
+	// api := r.Group(`/api`)
+	// {
+	// 	api.GET(`/lx`, lxHandler) // 洛雪音乐
 	// }
 	// 数据接口
 	// r.GET(`/file/:t/:hq/:n`, func(c *gin.Context) {
