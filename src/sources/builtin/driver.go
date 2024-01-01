@@ -5,6 +5,7 @@ import (
 	"lx-source/src/caches"
 	"lx-source/src/env"
 	"lx-source/src/sources"
+	"lx-source/src/sources/custom/tx"
 	"net/http"
 	"strconv"
 	"strings"
@@ -28,7 +29,7 @@ var (
 	mg_pool = &sync.Pool{New: func() any { return new(MgApi_Song) }}
 	kw_pool = &sync.Pool{New: func() any { return new(KwApi_Song) }}
 	kg_pool = &sync.Pool{New: func() any { return new(KgApi_Song) }}
-	tx_pool = &sync.Pool{New: func() any { return new(res_tx) }}
+	// tx_pool = &sync.Pool{New: func() any { return new(res_tx) }}
 )
 
 const (
@@ -161,37 +162,45 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 		}
 		outlink = data.PlayBackupURL
 	case s_tx:
-		resp := tx_pool.Get().(*res_tx)
-		defer tx_pool.Put(resp)
-
 		sep := c.Split()
-		url := ztool.Str_FastConcat(api_tx,
-			`{"comm":{"ct":24,"cv":0,"format":"json","uin":"10086"},"req":{"method":"GetCdnDispatch","module":"CDN.SrfCdnDispatchServer","param":{"calltype":0,"guid":"1535153710","userip":""}},"req_0":{"method":"CgiGetVkey","module":"vkey.GetVkeyServer","param":{`,
-			func(s string) string {
-				if s == `` {
-					return ``
-				}
-				return ztool.Str_FastConcat(`"filename":["`, rquery, s, `.`, c.Extname, `"],`)
-			}(sep[1]),
-			`"guid":"1535153710","loginflag":1,"platform":"20","songmid":["`, sep[0], `"],"songtype":[0],"uin":"10086"}}}`,
-		)
-		// jx.Debug(`Tx, Url: %s`, url)
-		out, err := ztool.Net_HttpReq(http.MethodGet, url, nil, header_tx, &resp)
-		if err != nil {
-			jx.Error(`Tx, HttpReq: %s`, err)
-			msg = errHttpReq
+		ourl, emsg := tx.Url(sep[0], c.Quality)
+		if emsg != `` {
+			msg = emsg
 			return
 		}
-		jx.Debug(`Tx, Resp: %s`, out)
-		if resp.Code != 0 {
-			msg = ztool.Str_FastConcat(`Error: `, strconv.Itoa(resp.Code))
-			return
-		}
-		if resp.Req0.Data.Midurlinfo[0].Purl == `` {
-			msg = errNoLink
-			return
-		}
-		outlink = ztool.Str_FastConcat(`https://dl.stream.qqmusic.qq.com/`, resp.Req0.Data.Midurlinfo[0].Purl)
+		outlink = ourl
+	// case `otx`:
+	// 	resp := tx_pool.Get().(*res_tx)
+	// 	defer tx_pool.Put(resp)
+
+	// 	sep := c.Split()
+	// 	url := ztool.Str_FastConcat(api_tx,
+	// 		`{"comm":{"ct":24,"cv":0,"format":"json","uin":"10086"},"req":{"method":"GetCdnDispatch","module":"CDN.SrfCdnDispatchServer","param":{"calltype":0,"guid":"1535153710","userip":""}},"req_0":{"method":"CgiGetVkey","module":"vkey.GetVkeyServer","param":{`,
+	// 		func(s string) string {
+	// 			if s == `` {
+	// 				return ``
+	// 			}
+	// 			return ztool.Str_FastConcat(`"filename":["`, rquery, s, `.`, c.Extname, `"],`)
+	// 		}(sep[1]),
+	// 		`"guid":"1535153710","loginflag":1,"platform":"20","songmid":["`, sep[0], `"],"songtype":[0],"uin":"10086"}}}`,
+	// 	)
+	// 	// jx.Debug(`Tx, Url: %s`, url)
+	// 	out, err := ztool.Net_HttpReq(http.MethodGet, url, nil, header_tx, &resp)
+	// 	if err != nil {
+	// 		jx.Error(`Tx, HttpReq: %s`, err)
+	// 		msg = errHttpReq
+	// 		return
+	// 	}
+	// 	jx.Debug(`Tx, Resp: %s`, out)
+	// 	if resp.Code != 0 {
+	// 		msg = ztool.Str_FastConcat(`Error: `, strconv.Itoa(resp.Code))
+	// 		return
+	// 	}
+	// 	if resp.Req0.Data.Midurlinfo[0].Purl == `` {
+	// 		msg = errNoLink
+	// 		return
+	// 	}
+	// 	outlink = ztool.Str_FastConcat(`https://dl.stream.qqmusic.qq.com/`, resp.Req0.Data.Midurlinfo[0].Purl)
 	default:
 		msg = `不支持的平台`
 		return

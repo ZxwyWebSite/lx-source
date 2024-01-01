@@ -63,6 +63,19 @@ type (
 		// 平台账号
 		// ...(待实现)
 	} // `comment:""`
+	Conf_Custom struct {
+		// kg (暂未实现)
+		// Kg_Enable bool `comment:"是否开启小枸源"`
+		// tx
+		Tx_Enable bool   `comment:"是否开启小秋源"`
+		Tx_Ukey   string `comment:"Cookie中/客户端的请求体中的（comm.authst）"`
+		Tx_Uuin   string `comment:"key对应的QQ号"`
+		// wy (暂未实现)
+		// Wy_Enable bool `comment:"是否开启小芸源"`
+		// Wy_Cookie string `comment:"账号cookie数据"`
+		// mg (暂未实现)
+		// Mg_Enable bool `comment:"是否开启小蜜源"`
+	}
 	Conf_Script struct {
 		Ver   string `comment:"自定义脚本版本" json:"ver"`
 		Log   string `comment:"更新日志" json:"log"`
@@ -87,6 +100,7 @@ type (
 		Apis   Conf_Apis   `comment:"接口设置"`
 		Auth   Conf_Auth   `comment:"访问控制"`
 		Source Conf_Source `comment:"解析源配置"`
+		Custom Conf_Custom `comment:"解析账号配置"`
 		Script Conf_Script `comment:"自定义脚本更新"` // ini:",omitempty"
 		Cache  Conf_Cache  `comment:"音乐缓存设置"`
 	}

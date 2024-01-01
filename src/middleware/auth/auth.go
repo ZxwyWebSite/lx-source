@@ -46,6 +46,8 @@ func InitHandler(h gin.HandlerFunc) (out []gin.HandlerFunc) {
 		loger.Debug(`RateLimit Enabled`)
 		loger.Info(`已启用速率限制，当前配置 %v/%v`, env.Config.Auth.RateLimit_Single, env.Config.Auth.RateLimit_Block)
 		newRateLimit := func() *RateLimit { return &RateLimit{Tim: time.Now().Unix(), Num: 1} }
+		block_int64 := int64(env.Config.Auth.RateLimit_Block)
+		block_int := int(env.Config.Auth.RateLimit_Block)
 		out = append(out, func(c *gin.Context) {
 			resp.Wrap(c, func() *resp.Resp {
 				rip := c.RemoteIP()
@@ -57,7 +59,7 @@ func InitHandler(h gin.HandlerFunc) (out []gin.HandlerFunc) {
 				if ok {
 					if oip, ok := cip.(*RateLimit); ok {
 						loger.Debug(`GetMemOut: %+v`, oip)
-						if oip.Tim+int64(env.Config.Auth.RateLimit_Block) > time.Now().Unix() {
+						if oip.Tim+block_int64 > time.Now().Unix() {
 							oi := atomic.AddUint32(&oip.Num, 1)
 							if oi > env.Config.Auth.RateLimit_Single {
 								return &resp.Resp{Code: 5, Msg: `请求过快，请稍后重试`}
@@ -67,7 +69,7 @@ func InitHandler(h gin.HandlerFunc) (out []gin.HandlerFunc) {
 					}
 				}
 				val := newRateLimit()
-				if err := env.Cache.Set(rip, val, int(env.Config.Auth.RateLimit_Block)); err != nil {
+				if err := env.Cache.Set(rip, val, block_int); err != nil {
 					loger.Error(`写入内存: %s`, err)
 					return &resp.Resp{Code: 4, Msg: `速率限制内部异常，请联系网站管理员`}
 				}

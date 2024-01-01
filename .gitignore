@@ -1,7 +1,7 @@
 bin/
 # cache/
 data/
-outdated/
+.outdated/
 # conf.ini
 test.go
 test_test.go

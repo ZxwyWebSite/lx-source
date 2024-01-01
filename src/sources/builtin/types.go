@@ -124,84 +124,84 @@ type (
 		// EVideoID           string `json:"e_video_id"`
 	}
 	// 腾讯试听接口
-	res_tx struct {
-		Code int `json:"code"`
-		// Ts      int64  `json:"ts"`
-		// StartTs int64  `json:"start_ts"`
-		// Traceid string `json:"traceid"`
-		// Req     struct {
-		// 	Code int `json:"code"`
-		// 	Data struct {
-		// 		Expiration    int      `json:"expiration"`
-		// 		Freeflowsip   []string `json:"freeflowsip"`
-		// 		Keepalivefile string   `json:"keepalivefile"`
-		// 		Msg           string   `json:"msg"`
-		// 		Retcode       int      `json:"retcode"`
-		// 		Servercheck   string   `json:"servercheck"`
-		// 		Sip           []string `json:"sip"`
-		// 		Testfile2G    string   `json:"testfile2g"`
-		// 		Testfilewifi  string   `json:"testfilewifi"`
-		// 		Uin           string   `json:"uin"`
-		// 		Userip        string   `json:"userip"`
-		// 		Vkey          string   `json:"vkey"`
-		// 	} `json:"data"`
-		// } `json:"req"`
-		Req0 struct {
-			Code int `json:"code"`
-			Data struct {
-				// Uin          string   `json:"uin"`
-				// Retcode      int      `json:"retcode"`
-				// VerifyType   int      `json:"verify_type"`
-				// LoginKey     string   `json:"login_key"`
-				// Msg          string   `json:"msg"`
-				// Sip          []string `json:"sip"`
-				// Thirdip      []string `json:"thirdip"`
-				// Testfile2G   string   `json:"testfile2g"`
-				// Testfilewifi string   `json:"testfilewifi"`
-				Midurlinfo []struct {
-					// Songmid           string `json:"songmid"`
-					// Filename          string `json:"filename"`
-					Purl string `json:"purl"`
-					// Errtype           string `json:"errtype"`
-					// P2Pfromtag        int    `json:"p2pfromtag"`
-					// Qmdlfromtag       int    `json:"qmdlfromtag"`
-					// CommonDownfromtag int    `json:"common_downfromtag"`
-					// VipDownfromtag    int    `json:"vip_downfromtag"`
-					// Pdl               int    `json:"pdl"`
-					// Premain           int    `json:"premain"`
-					// Hisdown           int    `json:"hisdown"`
-					// Hisbuy            int    `json:"hisbuy"`
-					// UIAlert           int    `json:"uiAlert"`
-					// Isbuy             int    `json:"isbuy"`
-					// Pneedbuy          int    `json:"pneedbuy"`
-					// Pneed             int    `json:"pneed"`
-					// Isonly            int    `json:"isonly"`
-					// Onecan            int    `json:"onecan"`
-					// Result            int    `json:"result"`
-					// Tips              string `json:"tips"`
-					// Opi48Kurl         string `json:"opi48kurl"`
-					// Opi96Kurl         string `json:"opi96kurl"`
-					// Opi192Kurl        string `json:"opi192kurl"`
-					// Opiflackurl       string `json:"opiflackurl"`
-					// Opi128Kurl        string `json:"opi128kurl"`
-					// Opi192Koggurl     string `json:"opi192koggurl"`
-					// Wififromtag       string `json:"wififromtag"`
-					// Flowfromtag       string `json:"flowfromtag"`
-					// Wifiurl           string `json:"wifiurl"`
-					// Flowurl           string `json:"flowurl"`
-					// Vkey              string `json:"vkey"`
-					// Opi30Surl         string `json:"opi30surl"`
-					// Ekey              string `json:"ekey"`
-					// AuthSwitch        int    `json:"auth_switch"`
-					// Subcode           int    `json:"subcode"`
-					// Opi96Koggurl      string `json:"opi96koggurl"`
-					// AuthSwitch2       int    `json:"auth_switch2"`
-				} `json:"midurlinfo"`
-				// Servercheck string `json:"servercheck"`
-				// Expiration  int    `json:"expiration"`
-			} `json:"data"`
-		} `json:"req_0"`
-	}
+	// res_tx struct {
+	// 	Code int `json:"code"`
+	// 	// Ts      int64  `json:"ts"`
+	// 	// StartTs int64  `json:"start_ts"`
+	// 	// Traceid string `json:"traceid"`
+	// 	// Req     struct {
+	// 	// 	Code int `json:"code"`
+	// 	// 	Data struct {
+	// 	// 		Expiration    int      `json:"expiration"`
+	// 	// 		Freeflowsip   []string `json:"freeflowsip"`
+	// 	// 		Keepalivefile string   `json:"keepalivefile"`
+	// 	// 		Msg           string   `json:"msg"`
+	// 	// 		Retcode       int      `json:"retcode"`
+	// 	// 		Servercheck   string   `json:"servercheck"`
+	// 	// 		Sip           []string `json:"sip"`
+	// 	// 		Testfile2G    string   `json:"testfile2g"`
+	// 	// 		Testfilewifi  string   `json:"testfilewifi"`
+	// 	// 		Uin           string   `json:"uin"`
+	// 	// 		Userip        string   `json:"userip"`
+	// 	// 		Vkey          string   `json:"vkey"`
+	// 	// 	} `json:"data"`
+	// 	// } `json:"req"`
+	// 	Req0 struct {
+	// 		Code int `json:"code"`
+	// 		Data struct {
+	// 			// Uin          string   `json:"uin"`
+	// 			// Retcode      int      `json:"retcode"`
+	// 			// VerifyType   int      `json:"verify_type"`
+	// 			// LoginKey     string   `json:"login_key"`
+	// 			// Msg          string   `json:"msg"`
+	// 			// Sip          []string `json:"sip"`
+	// 			// Thirdip      []string `json:"thirdip"`
+	// 			// Testfile2G   string   `json:"testfile2g"`
+	// 			// Testfilewifi string   `json:"testfilewifi"`
+	// 			Midurlinfo []struct {
+	// 				// Songmid           string `json:"songmid"`
+	// 				// Filename          string `json:"filename"`
+	// 				Purl string `json:"purl"`
+	// 				// Errtype           string `json:"errtype"`
+	// 				// P2Pfromtag        int    `json:"p2pfromtag"`
+	// 				// Qmdlfromtag       int    `json:"qmdlfromtag"`
+	// 				// CommonDownfromtag int    `json:"common_downfromtag"`
+	// 				// VipDownfromtag    int    `json:"vip_downfromtag"`
+	// 				// Pdl               int    `json:"pdl"`
+	// 				// Premain           int    `json:"premain"`
+	// 				// Hisdown           int    `json:"hisdown"`
+	// 				// Hisbuy            int    `json:"hisbuy"`
+	// 				// UIAlert           int    `json:"uiAlert"`
+	// 				// Isbuy             int    `json:"isbuy"`
+	// 				// Pneedbuy          int    `json:"pneedbuy"`
+	// 				// Pneed             int    `json:"pneed"`
+	// 				// Isonly            int    `json:"isonly"`
+	// 				// Onecan            int    `json:"onecan"`
+	// 				// Result            int    `json:"result"`
+	// 				// Tips              string `json:"tips"`
+	// 				// Opi48Kurl         string `json:"opi48kurl"`
+	// 				// Opi96Kurl         string `json:"opi96kurl"`
+	// 				// Opi192Kurl        string `json:"opi192kurl"`
+	// 				// Opiflackurl       string `json:"opiflackurl"`
+	// 				// Opi128Kurl        string `json:"opi128kurl"`
+	// 				// Opi192Koggurl     string `json:"opi192koggurl"`
+	// 				// Wififromtag       string `json:"wififromtag"`
+	// 				// Flowfromtag       string `json:"flowfromtag"`
+	// 				// Wifiurl           string `json:"wifiurl"`
+	// 				// Flowurl           string `json:"flowurl"`
+	// 				// Vkey              string `json:"vkey"`
+	// 				// Opi30Surl         string `json:"opi30surl"`
+	// 				// Ekey              string `json:"ekey"`
+	// 				// AuthSwitch        int    `json:"auth_switch"`
+	// 				// Subcode           int    `json:"subcode"`
+	// 				// Opi96Koggurl      string `json:"opi96koggurl"`
+	// 				// AuthSwitch2       int    `json:"auth_switch2"`
+	// 			} `json:"midurlinfo"`
+	// 			// Servercheck string `json:"servercheck"`
+	// 			// Expiration  int    `json:"expiration"`
+	// 		} `json:"data"`
+	// 	} `json:"req_0"`
+	// }
 )
 
 const (
@@ -255,12 +255,12 @@ var (
 	api_mg string
 	api_kw string
 	api_kg string = `https://wwwapi.kugou.com/yy/index.php?r=play/getdata&platid=4&mid=1`
-	api_tx string = `https://u.y.qq.com/cgi-bin/musicu.fcg?data=`
+	// api_tx string = `https://u.y.qq.com/cgi-bin/musicu.fcg?data=`
 	// Headers
 	header_wy map[string]string
 	header_mg map[string]string
 	header_kw map[string]string
-	header_tx = map[string]string{`Referer`: `https://y.qq.com/`}
+	// header_tx = map[string]string{`Referer`: `https://y.qq.com/`}
 )
 
 func init() {

@@ -5,8 +5,21 @@ import (
 )
 
 // var Loger = env.Loger.NewGroup(`Sources`) // JieXiApis
+
 const (
 	Err_Verify = `Verify Failed`
+	// 通用音质
+	Q_128k = `128k`
+	Q_320k = `320k`
+	Q_flac = `flac`
+	Q_fl24 = `flac24bit`
+	// 通用平台
+	S_wy = `wy` // 小芸
+	S_mg = `mg` // 小蜜
+	S_kw = `kw` // 小蜗
+	S_kg = `kg` // 小枸
+	S_tx = `tx` // 小秋
+	S_lx = `lx` // 小洛 (预留)
 )
 
 // 源查询接口
