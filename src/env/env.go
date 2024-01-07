@@ -2,14 +2,17 @@
 package env
 
 import (
+	"time"
+
 	"github.com/ZxwyWebSite/ztool"
 	"github.com/ZxwyWebSite/ztool/cache/memo"
 	"github.com/ZxwyWebSite/ztool/conf"
 	"github.com/ZxwyWebSite/ztool/logs"
+	"github.com/ZxwyWebSite/ztool/task"
 )
 
 const (
-	Version = `1.0.2-b0.8`
+	Version = `1.0.2-b0.9`
 )
 
 var (
@@ -46,7 +49,8 @@ type (
 		RateLimit_Block  uint32 `comment:"检测范围，每分区为x秒"` // 每x秒一个分区
 		RateLimit_Global uint32 `comment:"全局速率限制，单位次每x秒(暂未开放)"`
 		RateLimit_Single uint32 `comment:"单IP速率限制，单位次每x秒"`
-		// RateLimit_BanNum uint32 `commemt:"容忍限度，超出限制N倍后封禁"`
+		RateLimit_BanNum uint32 `comment:"容忍限度，超出限制N次后封禁"`
+		RateLimit_BanTim uint32 `comment:"封禁后每次延长时间"`
 		// 黑白名单
 		BanList_Mode  string   `comment:"名单模式 0: off(关闭), 1: white(白名单), 2: black(黑名单)"`
 		BanList_White []string `comment:"host白名单"`
@@ -64,17 +68,20 @@ type (
 		// ...(待实现)
 	} // `comment:""`
 	Conf_Custom struct {
+		// wy (暂未实现)
+		Wy_Enable bool `comment:"是否开启小芸源"`
+		// Wy_Cookie string `comment:"账号cookie数据"`
+		// mg (暂未实现)
+		// Mg_Enable bool `comment:"是否开启小蜜源"`
 		// kg (暂未实现)
 		// Kg_Enable bool `comment:"是否开启小枸源"`
 		// tx
 		Tx_Enable bool   `comment:"是否开启小秋源"`
 		Tx_Ukey   string `comment:"Cookie中/客户端的请求体中的（comm.authst）"`
 		Tx_Uuin   string `comment:"key对应的QQ号"`
-		// wy (暂未实现)
-		// Wy_Enable bool `comment:"是否开启小芸源"`
-		// Wy_Cookie string `comment:"账号cookie数据"`
-		// mg (暂未实现)
-		// Mg_Enable bool `comment:"是否开启小蜜源"`
+		// tx refresh_login
+		Tx_Refresh_Enable   bool  `comment:"是否启动刷新登录"`
+		Tx_Refresh_Interval int64 `comment:"刷新间隔 (由程序维护，非必要无需修改)"`
 	}
 	Conf_Script struct {
 		Ver   string `comment:"自定义脚本版本" json:"ver"`
@@ -111,7 +118,7 @@ var (
 	defCfg = Conf{
 		Main: Conf_Main{
 			Debug:   false,
-			Listen:  `0.0.0.0:1011`,
+			Listen:  `127.0.0.1:1011`,
 			Gzip:    false,
 			LogPath: `/data/logfile.log`,
 			Print:   true,
@@ -126,6 +133,8 @@ var (
 			RateLimit_Block:  30,
 			RateLimit_Global: 1,
 			RateLimit_Single: 15,
+			RateLimit_BanNum: 5,
+			RateLimit_BanTim: 10,
 			BanList_Mode:     `off`,
 			BanList_White:    []string{`127.0.0.1`},
 		},
@@ -135,6 +144,12 @@ var (
 			FakeIP_Value:  `192.168.10.2`,
 			Proxy_Enable:  false,
 			Proxy_Address: `{protocol}://({user}:{password})@{address}:{port}`,
+		},
+		Custom: Conf_Custom{
+			Wy_Enable:           true,
+			Tx_Enable:           false,
+			Tx_Refresh_Enable:   false,
+			Tx_Refresh_Interval: 86000,
 		},
 		Script: Conf_Script{
 			Log: `发布更新 (请删除旧源后重新导入)：进行了部分优化，修复了部分Bug`, // 更新日志
@@ -166,6 +181,8 @@ var (
 	})
 	Defer = new(ztool.Err_DeferList)
 	Cache = memo.NewMemoStoreConf(Loger, 300) // 内存缓存 默认每5分钟进行一次GC //memo.NewMemoStore()
+
+	Tasker = task.New(time.Hour, 2) // 定时任务 (暂时没有什么快速任务，默认每小时检测一次)
 )
 
 // func init() {

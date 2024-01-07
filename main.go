@@ -10,6 +10,7 @@ import (
 	"lx-source/src/router"
 	"lx-source/src/sources"
 	"lx-source/src/sources/builtin"
+	"lx-source/src/sources/custom/tx"
 	"math/rand"
 	"net/http"
 	"os"
@@ -166,9 +167,13 @@ func main() {
 		ise.Error(`未定义的音乐源，请检查配置 [Source].Mode，本次启动禁用内置源`)
 	}
 
-	// 启动Http服务
+	// 载入必要模块
 	env.Loger.NewGroup(`ServStart`).Info(`服务端启动, 监听地址 %s`, env.Config.Main.Listen)
 	loadFileLoger()
+	tx.Init()
+	env.Defer.Add(env.Tasker.Run(env.Loger)) // wait
+
+	// 启动Http服务
 	r := router.InitRouter() //InitRouter()
 	server := &http.Server{
 		Addr:    env.Config.Main.Listen,

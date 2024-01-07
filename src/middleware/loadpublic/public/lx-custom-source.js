@@ -48,7 +48,7 @@ const httpRequest = (url, options) => new Promise((resolve, reject) => {
 const musicUrl = async (source, info, quality) => {
   const start = new Date().getTime();
   const id = info.hash ?? info.copyrightId ?? info.songmid // 音乐id kg源为hash, mg源为copyrightId
-  const ext = source == 'kg' ? info.albumId : source == 'tx' ? info.strMediaMid : ''
+  const ext = source == 'kg' ? info.albumId : '' //source == 'tx' ? info.strMediaMid
   const query = `${source}/${id}${(ext != '' && ext != void 0) ? '-' + ext : ''}/${quality}`
   console.log('创建任务: %s, 音乐信息: %O', query, info)
   const body = await httpRequest(`${apiaddr}link/${query}`, { method: 'get' });

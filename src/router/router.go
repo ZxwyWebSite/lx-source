@@ -21,22 +21,26 @@ var (
 	defQuality = []string{`128k`, `320k`, `flac`, `flac24bit`}
 	// 试听音质
 	tstQuality = []string{`128k`}
+	// 标准音质
+	stdQuality = []string{`128k`, `320k`, `flac`}
 )
 
 // 自动生成支持的音质表
 func loadQMap() [][]string {
 	m := make([][]string, 6)
 	// 0.wy
-	m[0] = defQuality
+	if env.Config.Custom.Wy_Enable {
+		m[0] = defQuality
+	}
 	// 1.mg
 	m[1] = defQuality
 	// 2.kw
-	m[2] = []string{`128k`, `320k`, `flac`}
+	m[2] = stdQuality
 	// 3.kg
 	m[3] = tstQuality
 	// 4.tx
 	if env.Config.Custom.Tx_Enable {
-		m[4] = defQuality
+		m[4] = stdQuality
 	} else {
 		m[4] = tstQuality
 	}
@@ -64,11 +68,11 @@ func InitRouter() *gin.Engine {
 			`github`: `https://github.com/ZxwyWebSite/lx-source`,
 			// 可用平台
 			`source`: gin.H{
-				`wy`: qmap[0], //true,
-				`mg`: qmap[1], //true,
-				`kw`: qmap[2], //true,
-				`kg`: qmap[3], //[]string{`128k`, `320k`}, // 测试结构2, 启用时返回音质列表, 禁用为false
-				`tx`: qmap[4], //gin.H{ // "测试结构 不代表最终方式"
+				sources.S_wy: qmap[0], //true,
+				sources.S_mg: qmap[1], //true,
+				sources.S_kw: qmap[2], //true,
+				sources.S_kg: qmap[3], //[]string{`128k`, `320k`}, // 测试结构2, 启用时返回音质列表, 禁用为false
+				sources.S_tx: qmap[4], //gin.H{ // "测试结构 不代表最终方式"
 				// 	`enable`:   false,
 				// 	`qualitys`: []string{`128k`, `320k`, `flac`, `flac24bit`},
 				// },
@@ -177,8 +181,8 @@ func linkHandler(c *gin.Context) {
 			env.Cache.Set(cquery.Query(), ``, 600) // 发生错误的10分钟内禁止再次查询
 			return &resp.Resp{Code: 2, Msg: emsg}
 		}
-		// 缓存并获取直链
-		if outlink != `` && cstat && !ztool.Chk_IsMatch(cquery.Source, `kg`, `tx`) {
+		// 缓存并获取直链 !(s == `kg` || (s == `tx` && !tx_en)) => (s != `kg` && (s != `tx` || tx_en))
+		if outlink != `` && cstat && cquery.Source != sources.S_kg && (cquery.Source != sources.S_tx || env.Config.Custom.Tx_Enable) {
 			sc.Debug(`Method: Set, Link: %v`, outlink)
 			if link := caches.UseCache.Set(cquery, outlink); link != `` {
 				env.Cache.Set(cquery.Query(), link, 3600)

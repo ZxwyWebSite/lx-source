@@ -25,7 +25,7 @@ func (s *Source) Verify(c *caches.Query) (rquery string, ok bool) {
 
 var (
 	// 并发对象池 (用户限制在Router处实现)
-	wy_pool = &sync.Pool{New: func() any { return new(FyApi_Song) }}
+	wy_pool = &sync.Pool{New: func() any { return new(WyApi_Song) }}
 	mg_pool = &sync.Pool{New: func() any { return new(MgApi_Song) }}
 	kw_pool = &sync.Pool{New: func() any { return new(KwApi_Song) }}
 	kg_pool = &sync.Pool{New: func() any { return new(KgApi_Song) }}
@@ -35,12 +35,13 @@ var (
 const (
 	errHttpReq = `无法连接解析接口`
 	errNoLink  = `无法获取试听链接`
+	errDisable = `该音乐源已被禁用`
 )
 
 // 查询
 func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 	rquery, ok := s.Verify(c)
-	if !ok {
+	if !ok /*&& c.Source != `tx`*/ {
 		msg = sources.Err_Verify //`Verify Failed`
 		return
 	}
@@ -48,14 +49,20 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 	jx := env.Loger.NewGroup(`Sources`) //sources.Loger.AppGroup(`builtin`) //env.Loger.NewGroup(`JieXiApis`)
 	switch c.Source {
 	case s_wy:
-		resp := wy_pool.Get().(*FyApi_Song)
+		if !env.Config.Custom.Wy_Enable {
+			msg = errDisable
+			return
+		}
+		resp := wy_pool.Get().(*WyApi_Song)
 		defer wy_pool.Put(resp)
 
-		url := ztool.Str_FastConcat(`http://`, api_wy, `?id=`, c.MusicID, `&level=`, rquery, `&noCookie=true`)
+		// url := ztool.Str_FastConcat(`http://`, api_wy, `?id=`, c.MusicID, `&level=`, rquery, `&noCookie=true`)
+		url := ztool.Str_FastConcat(`https://`, api_wy, `&id=`, c.MusicID, `&level=`, rquery, `&encodeType=`, c.Extname)
 		// jx.Debug(`Wy, Url: %v`, url)
 		// wy源增加后端重试 默认3次
 		for i := 0; true; i++ {
-			_, err := ztool.Net_HttpReq(http.MethodGet, url, nil, header_wy, &resp)
+			// _, err := ztool.Net_HttpReq(http.MethodGet, url, nil, header_wy, &resp)
+			_, err := ztool.Net_HttpReq(http.MethodGet, url, nil, nil, &resp)
 			if err != nil {
 				jx.Error(`HttpReq, Err: %s, ReTry: %v`, err, i)
 				if i > 3 {

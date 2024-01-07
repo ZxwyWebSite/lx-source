@@ -46,6 +46,9 @@ var (
 		`Q000`: `dolby`,
 		`AI00`: `master`,
 	}
+	header = map[string]string{
+		`Referer`: `https://y.qq.com/`,
+	}
 )
 
 func signRequest(data []byte, out any) error {
@@ -54,9 +57,7 @@ func signRequest(data []byte, out any) error {
 		ztool.Str_FastConcat(`https://u.y.qq.com/cgi-bin/musics.fcg?format=json&sign=`, s),
 		bytes.NewReader(data),
 		[]ztool.Net_ReqHandlerFunc{
-			ztool.Net_ReqAddHeaders(map[string]string{
-				`Referer`: `https://y.qq.com/`,
-			}),
+			ztool.Net_ReqAddHeaders(header),
 		},
 		[]ztool.Net_ResHandlerFunc{
 			ztool.Net_ResToStruct(out),

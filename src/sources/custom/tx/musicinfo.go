@@ -218,30 +218,3 @@ func getMusicInfo(songMid string) (infoBody musicInfo, emsg string) {
 	infoBody = infoResp.Req.Data
 	return //infoBody.Req.Data, ``
 }
-
-// func (infoBody *musicInfo) GetLink(songMid, strFileName string) (ourl, msg string) {
-// 	var uauthst, uuin string = env.Config.Custom.Tx_Ukey, env.Config.Custom.Tx_Uuin
-// 	if uuin == `` {
-// 		uuin = `1535153710`
-// 	}
-// 	requestBody := ztool.Str_FastConcat(`{"comm":{"authst":"`, uauthst, `","ct":"26","cv":"2010101","qq":"`, uuin, `","v":"2010101"},"req_0":{"method":"CgiGetVkey","module":"vkey.GetVkeyServer","param":{"filename":["`, strFileName, `"],"guid":"114514","loginflag":1,"platform":"20","songmid":["`, songMid, `"],"songtype":[0],"uin":"10086"}}}`)
-// 	var infoResp struct {
-// 		Code int `json:"code"`
-// 		// Ts      int64    `json:"ts"`
-// 		// StartTs int64    `json:"start_ts"`
-// 		// Traceid string   `json:"traceid"`
-// 		Req0 playInfo `json:"req_0"`
-// 	}
-// 	err := signRequest(bytesconv.StringToBytes(requestBody), &infoResp)
-// 	if err != nil {
-// 		msg = err.Error()
-// 		return
-// 	}
-// 	infoData := infoResp.Req0.Data.Midurlinfo[0]
-// 	if infoData.Purl == `` {
-// 		msg = `无法获取音乐链接`
-// 		return
-// 	}
-// 	ourl = infoData.Purl
-// 	return
-// }

@@ -2,6 +2,7 @@ package tx
 
 import (
 	"lx-source/src/env"
+	"lx-source/src/sources"
 	"strings"
 
 	"github.com/ZxwyWebSite/ztool"
@@ -85,21 +86,25 @@ type playInfo struct {
      if没有链接:
       报错
    返回结果
+ 更新：
+  可通过 goto loop 实现，但可能会导致逻辑混乱 (想使用账号获取正常链接却返回试听链接)
 */
 
 func Url(songMid, quality string) (ourl, msg string) {
+	loger := env.Loger.NewGroup(`Tx`)
 	infoFile, ok := fileInfo[quality]
-	if !ok {
+	if !ok || (!env.Config.Custom.Tx_Enable && quality != sources.Q_128k) {
 		msg = `不支持的音质`
 		return
 	}
 	infoBody, emsg := getMusicInfo(songMid)
+	loger.Debug(`infoBody: %+v`, infoBody)
 	if emsg != `` {
 		msg = emsg
 		return
 	}
 	var uauthst, uuin string = env.Config.Custom.Tx_Ukey, env.Config.Custom.Tx_Uuin
-	if uuin == `` {
+	if uuin == `` || !env.Config.Custom.Tx_Enable {
 		uuin = `1535153710`
 	}
 	var strFileName string
@@ -122,6 +127,7 @@ func Url(songMid, quality string) (ourl, msg string) {
 		msg = err.Error()
 		return
 	}
+	loger.Debug(`infoResp: %+v`, infoResp)
 	infoData := infoResp.Req0.Data.Midurlinfo[0]
 	if infoData.Purl == `` {
 		msg = `无法获取音乐链接`
