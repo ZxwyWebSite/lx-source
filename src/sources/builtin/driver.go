@@ -5,10 +5,10 @@ import (
 	"lx-source/src/caches"
 	"lx-source/src/env"
 	"lx-source/src/sources"
+	"lx-source/src/sources/custom/kw"
 	"lx-source/src/sources/custom/tx"
 	"net/http"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -111,24 +111,35 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 		// 	jx.Debug(`Mg, Err: %#v`, resp)
 		// }
 	case s_kw:
-		resp := kw_pool.Get().(*KwApi_Song)
-		defer kw_pool.Put(resp)
+		if !env.Config.Custom.Kw_Enable {
+			msg = errDisable
+			return
+		}
+		ourl, emsg := kw.Url(c.MusicID, c.Quality)
+		if emsg != `` {
+			msg = emsg
+			return
+		}
+		outlink = ourl
+	// case s_kw:
+	// 	resp := kw_pool.Get().(*KwApi_Song)
+	// 	defer kw_pool.Put(resp)
 
-		url := ztool.Str_FastConcat(`https://`, api_kw, `/`, c.MusicID, `?isMv=0&format=`, c.Extname, `&br=`, rquery, c.Extname, `&level=`)
-		// jx.Debug(`Kw, Url: %s`, url)
-		_, err := ztool.Net_HttpReq(http.MethodGet, url, nil, header_kw, &resp)
-		if err != nil {
-			jx.Error(`Kw, HttpReq: %s`, err)
-			msg = errHttpReq //err.Error()
-			return
-		}
-		jx.Debug(`Kw, Resp: %+v`, resp)
-		if resp.Code != 200 || resp.Data.AudioInfo.Bitrate == `1` {
-			// jx.Debug(`Kw, Err: %#v`, resp)
-			msg = ztool.Str_FastConcat(`failed: `, resp.Msg)
-			return
-		}
-		outlink = strings.Split(resp.Data.URL, `?`)[0]
+	// 	url := ztool.Str_FastConcat(`https://`, api_kw, `/`, c.MusicID, `?isMv=0&format=`, c.Extname, `&br=`, rquery, c.Extname, `&level=`)
+	// 	// jx.Debug(`Kw, Url: %s`, url)
+	// 	_, err := ztool.Net_HttpReq(http.MethodGet, url, nil, header_kw, &resp)
+	// 	if err != nil {
+	// 		jx.Error(`Kw, HttpReq: %s`, err)
+	// 		msg = errHttpReq //err.Error()
+	// 		return
+	// 	}
+	// 	jx.Debug(`Kw, Resp: %+v`, resp)
+	// 	if resp.Code != 200 || resp.Data.AudioInfo.Bitrate == `1` {
+	// 		// jx.Debug(`Kw, Err: %#v`, resp)
+	// 		msg = ztool.Str_FastConcat(`failed: `, resp.Msg)
+	// 		return
+	// 	}
+	// 	outlink = strings.Split(resp.Data.URL, `?`)[0]
 	case s_kg:
 		resp := kg_pool.Get().(*KgApi_Song)
 		defer kg_pool.Put(resp)

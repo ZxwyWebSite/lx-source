@@ -20,6 +20,10 @@ const (
 	S_kg = `kg` // 小枸
 	S_tx = `tx` // 小秋
 	S_lx = `lx` // 小洛 (预留)
+	// 常用错误
+	E_QNotSupport = `不支持的音质`
+	E_QNotMatch   = `实际音质不匹配`
+	E_NoLink      = `无法获取音乐链接`
 )
 
 // 源查询接口

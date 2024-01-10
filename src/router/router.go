@@ -35,7 +35,9 @@ func loadQMap() [][]string {
 	// 1.mg
 	m[1] = defQuality
 	// 2.kw
+	// if env.Config.Custom.Kw_Enable {
 	m[2] = stdQuality
+	// }
 	// 3.kg
 	m[3] = tstQuality
 	// 4.tx

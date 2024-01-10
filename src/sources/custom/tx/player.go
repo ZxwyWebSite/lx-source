@@ -94,7 +94,7 @@ func Url(songMid, quality string) (ourl, msg string) {
 	loger := env.Loger.NewGroup(`Tx`)
 	infoFile, ok := fileInfo[quality]
 	if !ok || (!env.Config.Custom.Tx_Enable && quality != sources.Q_128k) {
-		msg = `不支持的音质`
+		msg = sources.E_QNotSupport //`不支持的音质`
 		return
 	}
 	infoBody, emsg := getMusicInfo(songMid)
@@ -130,12 +130,12 @@ func Url(songMid, quality string) (ourl, msg string) {
 	loger.Debug(`infoResp: %+v`, infoResp)
 	infoData := infoResp.Req0.Data.Midurlinfo[0]
 	if infoData.Purl == `` {
-		msg = `无法获取音乐链接`
+		msg = sources.E_NoLink //`无法获取音乐链接`
 		return
 	}
 	realQuality := strings.Split(infoData.Filename, `.`)[0][:4]
 	if qualityMapReverse[realQuality] != quality && /*infoBody.TrackInfo.Pay.PayPlay == 0*/ !tryLink {
-		msg = `实际音质不匹配`
+		msg = sources.E_QNotMatch //`实际音质不匹配`
 		return
 	}
 	ourl = ztool.Str_FastConcat(`https://ws.stream.qqmusic.qq.com/`, infoData.Purl)

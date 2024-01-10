@@ -19,10 +19,10 @@ import (
  6: http.StatusBadRequest,          // [400] 参数错误
 */
 type Resp struct {
-	Code int    `json:"code"` // 状态码 为兼容内置源设置 暂无实际作用 (1.0.2后已兼容Python版定义)
-	Msg  string `json:"msg"`  // 提示or报错信息
-	Data string `json:"data"` // 音乐URL
-	Ext  string `json:"ext"`  // 其它信息
+	Code int    `json:"code"`          // 状态码 为兼容内置源设置 暂无实际作用 (1.0.2后已兼容Python版定义)
+	Msg  string `json:"msg"`           // 提示or报错信息
+	Data string `json:"data"`          // 音乐URL
+	Ext  string `json:"ext,omitempty"` // 其它信息
 }
 
 // 返回码对应列表 (参考Python版)

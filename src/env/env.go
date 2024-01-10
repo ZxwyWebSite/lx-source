@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	Version = `1.0.2-b0.9`
+	Version = `1.0.2-b10`
 )
 
 var (
@@ -73,6 +73,8 @@ type (
 		// Wy_Cookie string `comment:"账号cookie数据"`
 		// mg (暂未实现)
 		// Mg_Enable bool `comment:"是否开启小蜜源"`
+		// kw
+		Kw_Enable bool `comment:"是否开启小蜗源"`
 		// kg (暂未实现)
 		// Kg_Enable bool `comment:"是否开启小枸源"`
 		// tx
@@ -147,6 +149,7 @@ var (
 		},
 		Custom: Conf_Custom{
 			Wy_Enable:           true,
+			Kw_Enable:           true,
 			Tx_Enable:           false,
 			Tx_Refresh_Enable:   false,
 			Tx_Refresh_Interval: 86000,

@@ -84,7 +84,7 @@ const init = () => {
     .catch((err) => { msg = '初始化失败: ' + err ?? '连接服务端超时'; console.log(msg) })
     .then((body) => {
       if (!body) { msg = '初始化失败：' + '无返回数据'; return }
-      console.log('获取服务端数据成功: %o', body)
+      console.log('获取服务端数据成功: %o, 版本: %s', body, body.version)
       // 检查Api大版本
       if (body.msg != `Hello~::^-^::~${conf.api.glbv}~`) {
         msg = 'Api大版本不匹配，请检查服务端与脚本是否兼容！'; return
