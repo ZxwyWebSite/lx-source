@@ -35,9 +35,7 @@ func loadQMap() [][]string {
 	// 1.mg
 	m[1] = defQuality
 	// 2.kw
-	// if env.Config.Custom.Kw_Enable {
-	m[2] = stdQuality
-	// }
+	m[2] = defQuality
 	// 3.kg
 	m[3] = tstQuality
 	// 4.tx
@@ -62,12 +60,12 @@ func InitRouter() *gin.Engine {
 	// 源信息
 	r.GET(`/`, func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
-			`version`:   env.Version,         // 服务端程序版本
-			`name`:      `lx-music-source`,   // 名称
-			`msg`:       `Hello~::^-^::~v1~`, // Api大版本
-			`developer`: []string{`Zxwy`},    // 开发者列表, 可在保留原作者的基础上添加你自己的名字?
+			`version`: env.Version,         // 服务端程序版本
+			`name`:    `lx-music-source`,   // 名称
+			`msg`:     `Hello~::^-^::~v1~`, // Api大版本
+			// `developer`: []string{`Zxwy`},    // 开发者列表, 可在保留原作者的基础上添加你自己的名字?
 			// 仓库地址
-			`github`: `https://github.com/ZxwyWebSite/lx-source`,
+			// `github`: `https://github.com/ZxwyWebSite/lx-source`,
 			// 可用平台
 			`source`: gin.H{
 				sources.S_wy: qmap[0], //true,
@@ -81,7 +79,7 @@ func InitRouter() *gin.Engine {
 				sources.S_lx: qmap[5],
 			},
 			// 自定义源脚本更新
-			`script`: env.Config.Script,
+			`script`: env.DefCfg.Script, //env.Config.Script,
 		})
 	})
 	// 静态文件

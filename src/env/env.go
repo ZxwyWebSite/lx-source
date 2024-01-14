@@ -71,12 +71,24 @@ type (
 		// wy (暂未实现)
 		Wy_Enable bool `comment:"是否开启小芸源"`
 		// Wy_Cookie string `comment:"账号cookie数据"`
+
 		// mg (暂未实现)
 		// Mg_Enable bool `comment:"是否开启小蜜源"`
+
 		// kw
-		Kw_Enable bool `comment:"是否开启小蜗源"`
+		Kw_Enable bool   `comment:"是否开启小蜗源"`
+		Kw_Mode   string `comment:"接口模式 0: bdapi(需验证), 1: kwdes"`
+		// kw bdapi
+		Kw_Bd_Uid   string `comment:"user.uid"`
+		Kw_Bd_Token string `comment:"user.token"`
+		Kw_Bd_DevId string `comment:"user.device_id"`
+		// kw kwdes
+		Kw_Des_Type   string `comment:"返回格式 0: text, 1: json"`
+		Kw_Des_Header string `comment:"请求头 User-Agent"`
+
 		// kg (暂未实现)
 		// Kg_Enable bool `comment:"是否开启小枸源"`
+
 		// tx
 		Tx_Enable bool   `comment:"是否开启小秋源"`
 		Tx_Ukey   string `comment:"Cookie中/客户端的请求体中的（comm.authst）"`
@@ -117,7 +129,7 @@ type (
 
 var (
 	// 默认配置
-	defCfg = Conf{
+	DefCfg = Conf{
 		Main: Conf_Main{
 			Debug:   false,
 			Listen:  `127.0.0.1:1011`,
@@ -148,8 +160,13 @@ var (
 			Proxy_Address: `{protocol}://({user}:{password})@{address}:{port}`,
 		},
 		Custom: Conf_Custom{
-			Wy_Enable:           true,
-			Kw_Enable:           true,
+			Wy_Enable: true,
+
+			Kw_Enable:     true,
+			Kw_Mode:       `kwdes`,
+			Kw_Des_Type:   `json`,
+			Kw_Des_Header: `okhttp/3.10.0`,
+
 			Tx_Enable:           false,
 			Tx_Refresh_Enable:   false,
 			Tx_Refresh_Interval: 86000,
@@ -157,9 +174,10 @@ var (
 		Script: Conf_Script{
 			Log: `发布更新 (请删除旧源后重新导入)：进行了部分优化，修复了部分Bug`, // 更新日志
 
-			Ver:   `1.0.3`,               // 自定义脚本版本
-			Url:   `lx-custom-source.js`, // 脚本下载地址
-			Force: true,                  // 强制推送更新
+			Ver:   `1.0.3`, // 自定义脚本版本
+			Force: true,    // 强制推送更新
+
+			Url: `public/lx-custom-source.js`, // 脚本下载地址
 		},
 		Cache: Conf_Cache{
 			Mode:       `local`, // 缓存模式
@@ -173,7 +191,7 @@ var (
 			Cloud_Path: `/Lx-Source/cache`,
 		},
 	}
-	Config = defCfg
+	Config = DefCfg
 	// 通用对象
 	Loger  = logs.NewLogger(`LX-SOURCE`)
 	Cfg, _ = conf.New(&Config, &conf.Confg{
@@ -184,10 +202,10 @@ var (
 	})
 	Defer = new(ztool.Err_DeferList)
 	Cache = memo.NewMemoStoreConf(Loger, 300) // 内存缓存 默认每5分钟进行一次GC //memo.NewMemoStore()
+	Inits = new(ztool.Err_DeferList)
 
 	Tasker = task.New(time.Hour, 2) // 定时任务 (暂时没有什么快速任务，默认每小时检测一次)
 )
 
 // func init() {
-
 // }

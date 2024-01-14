@@ -59,23 +59,23 @@ type (
 		} `json:"data"`
 	}
 	// 酷我音乐接口 (波点)
-	KwApi_Song struct {
-		Code  int    `json:"code"`
-		Msg   string `json:"msg"`
-		ReqID string `json:"reqId"`
-		Data  struct {
-			Duration  int `json:"duration"`
-			AudioInfo struct {
-				Bitrate string `json:"bitrate"`
-				Format  string `json:"format"`
-				Level   string `json:"level"`
-				Size    string `json:"size"`
-			} `json:"audioInfo"`
-			URL string `json:"url"`
-		} `json:"data"`
-		ProfileID string `json:"profileId"`
-		CurTime   int64  `json:"curTime"`
-	}
+	// KwApi_Song struct {
+	// 	Code  int    `json:"code"`
+	// 	Msg   string `json:"msg"`
+	// 	ReqID string `json:"reqId"`
+	// 	Data  struct {
+	// 		Duration  int `json:"duration"`
+	// 		AudioInfo struct {
+	// 			Bitrate string `json:"bitrate"`
+	// 			Format  string `json:"format"`
+	// 			Level   string `json:"level"`
+	// 			Size    string `json:"size"`
+	// 		} `json:"audioInfo"`
+	// 		URL string `json:"url"`
+	// 	} `json:"data"`
+	// 	ProfileID string `json:"profileId"`
+	// 	CurTime   int64  `json:"curTime"`
+	// }
 	// 酷狗试听接口
 	KgApi_Song struct {
 		Status  int `json:"status"`

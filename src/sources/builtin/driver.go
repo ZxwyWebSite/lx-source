@@ -27,7 +27,7 @@ var (
 	// 并发对象池 (用户限制在Router处实现)
 	wy_pool = &sync.Pool{New: func() any { return new(WyApi_Song) }}
 	mg_pool = &sync.Pool{New: func() any { return new(MgApi_Song) }}
-	kw_pool = &sync.Pool{New: func() any { return new(KwApi_Song) }}
+	// kw_pool = &sync.Pool{New: func() any { return new(KwApi_Song) }}
 	kg_pool = &sync.Pool{New: func() any { return new(KgApi_Song) }}
 	// tx_pool = &sync.Pool{New: func() any { return new(res_tx) }}
 )
@@ -56,7 +56,11 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 		resp := wy_pool.Get().(*WyApi_Song)
 		defer wy_pool.Put(resp)
 
-		// url := ztool.Str_FastConcat(`http://`, api_wy, `?id=`, c.MusicID, `&level=`, rquery, `&noCookie=true`)
+		// urls := [...]string{
+		// 	ztool.Str_FastConcat(`http://`, api_wy, `?id=`, c.MusicID, `&level=`, rquery, `&noCookie=true`),
+		// 	ztool.Str_FastConcat(`https://`, api_wy, `&id=`, c.MusicID, `&level=`, rquery, `&encodeType=`, c.Extname),
+		// }
+		// url := urls[rand.Intn(len(urls))]
 		url := ztool.Str_FastConcat(`https://`, api_wy, `&id=`, c.MusicID, `&level=`, rquery, `&encodeType=`, c.Extname)
 		// jx.Debug(`Wy, Url: %v`, url)
 		// wy源增加后端重试 默认3次
@@ -121,25 +125,6 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 			return
 		}
 		outlink = ourl
-	// case s_kw:
-	// 	resp := kw_pool.Get().(*KwApi_Song)
-	// 	defer kw_pool.Put(resp)
-
-	// 	url := ztool.Str_FastConcat(`https://`, api_kw, `/`, c.MusicID, `?isMv=0&format=`, c.Extname, `&br=`, rquery, c.Extname, `&level=`)
-	// 	// jx.Debug(`Kw, Url: %s`, url)
-	// 	_, err := ztool.Net_HttpReq(http.MethodGet, url, nil, header_kw, &resp)
-	// 	if err != nil {
-	// 		jx.Error(`Kw, HttpReq: %s`, err)
-	// 		msg = errHttpReq //err.Error()
-	// 		return
-	// 	}
-	// 	jx.Debug(`Kw, Resp: %+v`, resp)
-	// 	if resp.Code != 200 || resp.Data.AudioInfo.Bitrate == `1` {
-	// 		// jx.Debug(`Kw, Err: %#v`, resp)
-	// 		msg = ztool.Str_FastConcat(`failed: `, resp.Msg)
-	// 		return
-	// 	}
-	// 	outlink = strings.Split(resp.Data.URL, `?`)[0]
 	case s_kg:
 		resp := kg_pool.Get().(*KgApi_Song)
 		defer kg_pool.Put(resp)

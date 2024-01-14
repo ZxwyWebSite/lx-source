@@ -30,11 +30,13 @@ import (
 // 	return
 // }
 
-func Init() {
-	if env.Config.Custom.Tx_Refresh_Enable {
-		env.Tasker.Add(`refresh_login`, func(l *logs.Logger) error {
-			refresh(l)
-			return nil
-		}, 86000, true)
-	}
+func init() {
+	env.Inits.Add(func() {
+		if env.Config.Custom.Tx_Refresh_Enable {
+			env.Tasker.Add(`refresh_login`, func(l *logs.Logger) error {
+				refresh(l)
+				return nil
+			}, 86000, true)
+		}
+	})
 }

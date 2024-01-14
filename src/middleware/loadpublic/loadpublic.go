@@ -20,9 +20,9 @@ var publicEM embed.FS // 打包默认Public目录 src/router/router.go
 // 载入Public目录并设置路由
 func LoadPublic(r *gin.Engine) {
 	pf := env.Loger.NewGroup(`PublicFS`)
-	var httpFS http.FileSystem
 	dir := ztool.Str_FastConcat(env.RunPath, `/data/public`)
 	publicFS, err := fs.Sub(publicEM, `public`)
+	var httpFS http.FileSystem = http.FS(publicFS)
 	if err != nil {
 		pf.Fatal(`内置Public目录载入错误: %s, 请尝试重新编译`, err)
 	}
@@ -38,7 +38,7 @@ func LoadPublic(r *gin.Engine) {
 					return fmt.Errorf(`无法创建文件[%q]: %s`, relPath, err)
 				}
 				defer out.Close()
-				pf.Info(`导出 [%q]...`, relPath)
+				pf.Debug(`导出 [%q]...`, relPath)
 				obj, err := publicFS.Open(relPath)
 				if err != nil {
 					return fmt.Errorf(`无法打开文件[%q]: %s`, relPath, err)
@@ -50,23 +50,26 @@ func LoadPublic(r *gin.Engine) {
 			return nil
 		}
 		if err := fs.WalkDir(publicFS, `.`, walk); err != nil {
-			pf.Fatal(`无法释放静态文件: %s`, err)
+			pf.Error(`无法释放静态文件: %s`, err)
 			// pf.Warn(`正在使用内置Public目录, 将无法自定义静态文件`)
 			// httpFS = http.FS(publicFS)
 		} else {
 			pf.Info(`全部静态资源导出完成, 祝你使用愉快 ^_^`)
 		}
 	}
-	httpFS = gin.Dir(dir, false)
-	r.GET(`/:file`, func(c *gin.Context) {
-		file := c.Param(`file`)
-		switch file {
-		case `favicon.ico`:
-			c.FileFromFS(`icon.ico`, httpFS)
-		case `lx-custom-source.js`:
-			c.FileFromFS(`lx-custom-source.js`, http.FS(publicFS))
-		default:
-			c.FileFromFS(file, httpFS)
-		}
-	})
+	// httpFS = gin.Dir(dir, false)
+	// r.GET(`/:file`, func(c *gin.Context) {
+	// 	file := c.Param(`file`)
+	// 	switch file {
+	// 	case `favicon.ico`:
+	// 		c.FileFromFS(`icon.ico`, httpFS)
+	// 	// case `lx-custom-source.js`:
+	// 	// 	c.FileFromFS(`lx-custom-source.js`, http.FS(publicFS))
+	// 	default:
+	// 		c.FileFromFS(file, httpFS)
+	// 	}
+	// })
+	r.StaticFileFS(`/favicon.ico`, `icon.ico`, httpFS)
+	r.StaticFileFS(`/lx-custom-source.js`, `lx-custom-source.js`, httpFS)
+	r.StaticFS(`/public`, httpFS)
 }

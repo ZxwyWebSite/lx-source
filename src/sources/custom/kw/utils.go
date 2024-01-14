@@ -9,8 +9,8 @@ import (
 
 var (
 	fileInfo = map[string]struct {
-		E string
-		H string
+		E string // 扩展名
+		H string // 专用音质
 	}{
 		sources.Q_128k: {
 			E: `mp3`,
@@ -24,14 +24,27 @@ var (
 			E: sources.Q_flac,
 			H: `2000k`,
 		},
+		sources.Q_fl24: {
+			E: sources.Q_flac,
+			H: `4000k`,
+		},
 	}
 	qualityMapReverse = map[string]string{
 		`128`:  sources.Q_128k,
 		`320`:  sources.Q_320k,
 		`2000`: sources.Q_flac,
+		`4000`: sources.Q_fl24,
 	}
-	header = map[string]string{
-		`User-Agent`: `okhttp/3.10.0`,
+	desheader = map[string]string{
+		// `User-Agent`: `okhttp/3.10.0`,
+	}
+	bdheader = map[string]string{
+		`channel`: `qq`,
+		`plat`:    `ar`,
+		`net`:     `wifi`,
+		`ver`:     `3.1.2`,
+		// `uid`:     ``,
+		// `devId`:   `0`,
 	}
 )
 
@@ -44,7 +57,7 @@ func mkMap(data []byte) map[string]string {
 			out[bytesconv.BytesToString(pat[0])] = bytesconv.BytesToString(pat[1])
 			continue
 		}
-		out[`_etc`] += bytesconv.BytesToString(pat[0]) + `; `
+		out[`_`] += bytesconv.BytesToString(pat[0]) + `;`
 	}
 	return out
 }

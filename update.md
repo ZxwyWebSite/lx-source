@@ -1,5 +1,14 @@
 ## Lx-Source/更新日志
 
+#### \# 2024-01-13 v1.0.2-b10 (beta)
++ 不再支持自定义Public目录，默认使用内置embedFS提供服务
++ 修改脚本更新路径为 `public/lx-custom-source.js`
++ 优化kw内置源获取方式
++ 强制使用默认Script配置
++ 隐藏服务端信息中的`developer,github`字段
++ 为Windows构建添加文件属性
+<!-- + 添加wy源接口分流功能 -->
+
 #### \# 2024-01-10 v1.0.2-b10-d1 (dev)
 <!-- + 内置kw接口失效，暂时禁用kw源 -->
 + 修复内置kw接口

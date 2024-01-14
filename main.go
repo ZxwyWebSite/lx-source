@@ -10,7 +10,6 @@ import (
 	"lx-source/src/router"
 	"lx-source/src/sources"
 	"lx-source/src/sources/builtin"
-	"lx-source/src/sources/custom/tx"
 	"math/rand"
 	"net/http"
 	"os"
@@ -168,9 +167,9 @@ func main() {
 	}
 
 	// 载入必要模块
+	env.Inits.Do()
 	env.Loger.NewGroup(`ServStart`).Info(`服务端启动, 监听地址 %s`, env.Config.Main.Listen)
 	loadFileLoger()
-	tx.Init()
 	env.Defer.Add(env.Tasker.Run(env.Loger)) // wait
 
 	// 启动Http服务

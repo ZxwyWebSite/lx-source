@@ -122,7 +122,7 @@ var (
 		15, 1, 5, 12, 3, 10, 14, 5,
 		8, 7, 11, 0, 4, 13, 2, 11},
 	}
-	SECRET_KEY = bytesconv.StringToBytes(`ylzsxkwm`) //[]byte("ylzsxkwm")
+	SECRET_KEY = []byte{0x79, 0x6c, 0x7a, 0x73, 0x78, 0x6b, 0x77, 0x6d} //bytesconv.StringToBytes(`ylzsxkwm`)
 )
 
 // 初始化arrayMask

@@ -24,6 +24,10 @@ const (
 	E_QNotSupport = `不支持的音质`
 	E_QNotMatch   = `实际音质不匹配`
 	E_NoLink      = `无法获取音乐链接`
+	// 内置错误
+	ErrHttpReq = `无法连接解析接口`
+	ErrNoLink  = `无法获取试听链接`
+	ErrDisable = `该音乐源已被禁用`
 )
 
 // 源查询接口
