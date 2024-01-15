@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	Version = `1.0.2-b10`
+	Version = `1.0.2-b11`
 )
 
 var (
@@ -64,8 +64,9 @@ type (
 		// 代理
 		Proxy_Enable  bool   `comment:"使用代理"`
 		Proxy_Address string `comment:"代理地址 (支持http, socks)"`
-		// 平台账号
-		// ...(待实现)
+		// 验证
+		MusicIdVerify bool `comment:"(beta) 验证音乐ID可用性"`
+		ForceFallback bool `comment:"忽略音质限制,强制获取试听音频"`
 	} // `comment:""`
 	Conf_Custom struct {
 		// wy (暂未实现)

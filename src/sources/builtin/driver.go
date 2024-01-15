@@ -30,13 +30,16 @@ var (
 	// kw_pool = &sync.Pool{New: func() any { return new(KwApi_Song) }}
 	kg_pool = &sync.Pool{New: func() any { return new(KgApi_Song) }}
 	// tx_pool = &sync.Pool{New: func() any { return new(res_tx) }}
+	wv_pool *sync.Pool
 )
 
-const (
-	errHttpReq = `无法连接解析接口`
-	errNoLink  = `无法获取试听链接`
-	errDisable = `该音乐源已被禁用`
-)
+func init() {
+	env.Inits.Add(func() {
+		if env.Config.Source.MusicIdVerify {
+			wv_pool = &sync.Pool{New: func() any { return new(WyApi_Vef) }}
+		}
+	})
+}
 
 // 查询
 func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
@@ -48,30 +51,50 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 	// var outlink string
 	jx := env.Loger.NewGroup(`Sources`) //sources.Loger.AppGroup(`builtin`) //env.Loger.NewGroup(`JieXiApis`)
 	switch c.Source {
-	case s_wy:
+	case sources.S_wy:
 		if !env.Config.Custom.Wy_Enable {
-			msg = errDisable
+			msg = sources.ErrDisable
 			return
 		}
+		// 可用性验证
+		if env.Config.Source.MusicIdVerify {
+			vef := wv_pool.Get().(*WyApi_Vef)
+			defer wv_pool.Put(vef)
+			vurl := ztool.Str_FastConcat(`https://`, vef_wy, `&id=`, c.MusicID)
+			_, err := ztool.Net_HttpReq(http.MethodGet, vurl, nil, header_wy, &vef)
+			if err != nil {
+				jx.Error(`Wy, VefReq: %s`, err)
+				msg = sources.ErrHttpReq
+				return
+			}
+			jx.Debug(`Wy, Vef: %+v`, vef)
+			if vef.Code != 200 || !vef.Success {
+				msg = ztool.Str_FastConcat(`暂不可用：`, vef.Message)
+				return
+			}
+		}
+		// 获取外链
 		resp := wy_pool.Get().(*WyApi_Song)
 		defer wy_pool.Put(resp)
-
+		// 分流逻辑 (暂无其它节点)
 		// urls := [...]string{
 		// 	ztool.Str_FastConcat(`http://`, api_wy, `?id=`, c.MusicID, `&level=`, rquery, `&noCookie=true`),
 		// 	ztool.Str_FastConcat(`https://`, api_wy, `&id=`, c.MusicID, `&level=`, rquery, `&encodeType=`, c.Extname),
 		// }
 		// url := urls[rand.Intn(len(urls))]
-		url := ztool.Str_FastConcat(`https://`, api_wy, `&id=`, c.MusicID, `&level=`, rquery, `&encodeType=`, c.Extname)
+		url := ztool.Str_FastConcat(
+			`https://`, api_wy, `&id=`, c.MusicID, `&level=`, rquery,
+			`&timestamp=`, strconv.FormatInt(time.Now().UnixMilli(), 10),
+		)
 		// jx.Debug(`Wy, Url: %v`, url)
 		// wy源增加后端重试 默认3次
 		for i := 0; true; i++ {
-			// _, err := ztool.Net_HttpReq(http.MethodGet, url, nil, header_wy, &resp)
-			_, err := ztool.Net_HttpReq(http.MethodGet, url, nil, nil, &resp)
+			_, err := ztool.Net_HttpReq(http.MethodGet, url, nil, header_wy, &resp)
 			if err != nil {
 				jx.Error(`HttpReq, Err: %s, ReTry: %v`, err, i)
 				if i > 3 {
 					jx.Error(`Wy, HttpReq: %s`, err)
-					msg = errHttpReq //err.Error()
+					msg = sources.ErrHttpReq
 					return
 				}
 				time.Sleep(time.Second)
@@ -96,7 +119,7 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 		}
 		// jx.Info(`WyLink, RealQuality: %v`, data.Level)
 		outlink = data.URL
-	case s_mg:
+	case sources.S_mg:
 		resp := mg_pool.Get().(*MgApi_Song)
 		defer mg_pool.Put(resp)
 
@@ -105,7 +128,7 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 		_, err := ztool.Net_HttpReq(http.MethodGet, url, nil, header_mg, &resp)
 		if err != nil {
 			jx.Error(`Mg, HttpReq: %s`, err)
-			msg = errHttpReq //err.Error()
+			msg = sources.ErrHttpReq
 			return
 		}
 		jx.Debug(`Mg, Resp: %+v`, resp)
@@ -114,9 +137,9 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 		} // else {
 		// 	jx.Debug(`Mg, Err: %#v`, resp)
 		// }
-	case s_kw:
+	case sources.S_kw:
 		if !env.Config.Custom.Kw_Enable {
-			msg = errDisable
+			msg = sources.ErrDisable
 			return
 		}
 		ourl, emsg := kw.Url(c.MusicID, c.Quality)
@@ -125,7 +148,7 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 			return
 		}
 		outlink = ourl
-	case s_kg:
+	case sources.S_kg:
 		resp := kg_pool.Get().(*KgApi_Song)
 		defer kg_pool.Put(resp)
 
@@ -142,10 +165,10 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 		_, err := ztool.Net_HttpReq(http.MethodGet, url, nil, nil, &resp)
 		if err != nil {
 			jx.Error(`Kg, HttpReq: %s`, err)
-			msg = errHttpReq //err.Error()
+			msg = sources.ErrHttpReq
 			return
 		}
-		jx.Debug(`Kw, Resp: %+v`, resp)
+		jx.Debug(`Kg, Resp: %+v`, resp)
 		if resp.ErrCode != 0 {
 			msg = ztool.Str_FastConcat(`Error: `, strconv.Itoa(resp.ErrCode))
 			return
@@ -158,15 +181,19 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 		}
 		if data.PlayBackupURL == `` {
 			if data.PlayURL == `` {
-				msg = errNoLink
+				msg = sources.ErrNoLink
 				return
 			}
 			outlink = data.PlayURL
 		}
 		outlink = data.PlayBackupURL
-	case s_tx:
-		sep := c.Split()
-		ourl, emsg := tx.Url(sep[0], c.Quality)
+	case sources.S_tx:
+		// sep := c.Split()
+		if len(c.MusicID) != 14 {
+			msg = sources.E_VefMusicId
+			return
+		}
+		ourl, emsg := tx.Url(c.MusicID, c.Quality)
 		if emsg != `` {
 			msg = emsg
 			return

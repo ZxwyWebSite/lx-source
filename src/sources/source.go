@@ -24,6 +24,7 @@ const (
 	E_QNotSupport = `不支持的音质`
 	E_QNotMatch   = `实际音质不匹配`
 	E_NoLink      = `无法获取音乐链接`
+	E_VefMusicId  = `音乐ID校验失败`
 	// 内置错误
 	ErrHttpReq = `无法连接解析接口`
 	ErrNoLink  = `无法获取试听链接`
