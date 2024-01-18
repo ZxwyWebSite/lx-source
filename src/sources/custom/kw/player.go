@@ -4,9 +4,9 @@ import (
 	"io"
 	"lx-source/src/env"
 	"lx-source/src/sources"
+	"lx-source/src/sources/custom/utils"
 	"net/http"
 	"strconv"
-	"strings"
 	"sync"
 
 	"github.com/ZxwyWebSite/ztool"
@@ -94,7 +94,7 @@ func bdapi(songMid, quality string) (ourl, msg string) {
 		msg = ztool.Str_FastConcat(`failed: `, resp.Msg)
 		return
 	}
-	ourl = strings.Split(resp.Data.URL, `?`)[0]
+	ourl = utils.DelQuery(resp.Data.URL) //strings.Split(resp.Data.URL, `?`)[0]
 	return
 }
 
@@ -136,11 +136,11 @@ func kwdes(songMid, quality string) (ourl, msg string) {
 			return
 		}
 		realQuality := strconv.Itoa(resp.Data.Bitrate)
-		if qualityMapReverse[realQuality] != quality {
+		if realQuality != infoFile.H[:len(infoFile.H)-1] {
 			msg = sources.E_QNotMatch
 			return
 		}
-		ourl = resp.Data.URL[:strings.Index(resp.Data.URL, `?`)]
+		ourl = utils.DelQuery(resp.Data.URL) //resp.Data.URL[:strings.Index(resp.Data.URL, `?`)]
 		return
 	}
 	ztool.Net_Request(http.MethodGet, target_url, nil,
@@ -161,12 +161,12 @@ func kwdes(songMid, quality string) (ourl, msg string) {
 				}
 				infoData := mkMap(data)
 				loger.Debug(`infoData: %+v`, infoData)
-				realQuality := qualityMapReverse[infoData[`bitrate`]]
-				if realQuality != quality {
+				realQuality := infoData[`bitrate`]
+				if realQuality != infoFile.H[:len(infoFile.H)-1] {
 					msg = sources.E_QNotMatch
 					return
 				}
-				ourl = infoData[`url`][:strings.Index(infoData[`url`], `?`)]
+				ourl = utils.DelQuery(infoData[`url`]) //infoData[`url`][:strings.Index(infoData[`url`], `?`)]
 				return
 			},
 		},

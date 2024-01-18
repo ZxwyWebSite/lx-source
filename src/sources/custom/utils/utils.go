@@ -1,5 +1,9 @@
 package utils
 
+import (
+	"github.com/ZxwyWebSite/ztool"
+)
+
 // func SizeFormat(size int) string {
 // 	if size < 1024 {
 // 		return ztool.Str_FastConcat(strconv.Itoa(size), `B`)
@@ -10,3 +14,8 @@ package utils
 // 	}
 // 	return ``
 // }
+
+// 删除?号后尾随内容
+func DelQuery(str string) string {
+	return ztool.Str_Before(str, `?`)
+}

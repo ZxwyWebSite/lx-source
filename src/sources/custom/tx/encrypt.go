@@ -1,13 +1,12 @@
 package tx
 
 import (
-	"crypto/md5"
-	"encoding/hex"
 	"regexp"
 	"strings"
 
 	"github.com/ZxwyWebSite/ztool"
 	"github.com/ZxwyWebSite/ztool/x/bytesconv"
+	"github.com/ZxwyWebSite/ztool/zcypt"
 )
 
 func v(b string) string {
@@ -106,14 +105,14 @@ func t(b string) (res []int) {
 	return //res
 }
 
-func createMD5(s []byte) string {
-	hash := md5.New()
-	hash.Write(s)
-	return hex.EncodeToString(hash.Sum(nil))
-}
+// func createMD5(s []byte) string {
+// 	hash := md5.New()
+// 	hash.Write(s)
+// 	return hex.EncodeToString(hash.Sum(nil))
+// }
 
 func sign(params []byte) string {
-	md5Str := strings.ToUpper(createMD5(params))
+	md5Str := strings.ToUpper(zcypt.CreateMD5(params))
 	h := v(md5Str)
 	e := c(md5Str)
 	ls := t(md5Str)

@@ -1,5 +1,11 @@
 ## Lx-Source/更新日志
 
+#### \# 2024-01-18 v1.0.2-b12-d1 (dev)
++ 对部分功能实现方式进行优化，去除qualityMapReverse依赖
++ 由于wy修改api验证方式，python版逻辑已不可用，现参考NeteaseCloudMusicApi项目进行修改
++ 实现wy外链获取逻辑(暂未实装)
+<!-- + 添加wy电台(wd)支持 -->
+
 #### \# 2024-01-15 v1.0.2-b11 (beta)
 <!-- + 支持ForceFallback(忽略音质限制,获取试听音频) -->
 + 测试版MusicId验证

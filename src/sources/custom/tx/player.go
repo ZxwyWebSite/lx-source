@@ -3,7 +3,6 @@ package tx
 import (
 	"lx-source/src/env"
 	"lx-source/src/sources"
-	"strings"
 
 	"github.com/ZxwyWebSite/ztool"
 	"github.com/ZxwyWebSite/ztool/x/bytesconv"
@@ -133,9 +132,13 @@ func Url(songMid, quality string) (ourl, msg string) {
 		msg = sources.E_NoLink //`无法获取音乐链接`
 		return
 	}
-	realQuality := strings.Split(infoData.Filename, `.`)[0][:4]
-	if qualityMapReverse[realQuality] != quality && /*infoBody.TrackInfo.Pay.PayPlay == 0*/ !tryLink {
-		msg = sources.E_QNotMatch //`实际音质不匹配`
+	realQuality := ztool.Str_Before(infoData.Filename, `.`)[:4] //strings.Split(infoData.Filename, `.`)[0][:4]
+	// if qualityMapReverse[realQuality] != quality && /*infoBody.TrackInfo.Pay.PayPlay == 0*/ !tryLink {
+	// 	msg = sources.E_QNotMatch //`实际音质不匹配`
+	// 	return
+	// }
+	if realQuality != infoFile.H && !tryLink {
+		msg = sources.E_QNotMatch
 		return
 	}
 	ourl = ztool.Str_FastConcat(`https://ws.stream.qqmusic.qq.com/`, infoData.Purl)

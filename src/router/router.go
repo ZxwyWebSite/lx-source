@@ -31,6 +31,8 @@ func loadQMap() [][]string {
 	// 0.wy
 	if env.Config.Custom.Wy_Enable {
 		m[0] = defQuality
+	} else {
+		m[0] = tstQuality
 	}
 	// 1.mg
 	m[1] = defQuality

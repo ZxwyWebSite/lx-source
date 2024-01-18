@@ -29,12 +29,13 @@ var (
 			H: `4000k`,
 		},
 	}
-	qualityMapReverse = map[string]string{
-		`128`:  sources.Q_128k,
-		`320`:  sources.Q_320k,
-		`2000`: sources.Q_flac,
-		`4000`: sources.Q_fl24,
-	}
+	// 注：这个还是有规律的，加上或去掉k即可直接比较
+	// qualityMapReverse = map[string]string{
+	// 	`128`:  sources.Q_128k,
+	// 	`320`:  sources.Q_320k,
+	// 	`2000`: sources.Q_flac,
+	// 	`4000`: sources.Q_fl24,
+	// }
 	desheader = map[string]string{
 		// `User-Agent`: `okhttp/3.10.0`,
 	}

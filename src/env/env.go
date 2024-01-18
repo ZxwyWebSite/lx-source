@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	Version = `1.0.2-b11`
+	Version = `1.0.2-b12`
 )
 
 var (
@@ -70,8 +70,8 @@ type (
 	} // `comment:""`
 	Conf_Custom struct {
 		// wy (暂未实现)
-		Wy_Enable bool `comment:"是否开启小芸源"`
-		// Wy_Cookie string `comment:"账号cookie数据"`
+		Wy_Enable bool   `comment:"是否开启小芸源"`
+		Wy_Cookie string `comment:"账号cookie数据"`
 
 		// mg (暂未实现)
 		// Mg_Enable bool `comment:"是否开启小蜜源"`
@@ -80,9 +80,9 @@ type (
 		Kw_Enable bool   `comment:"是否开启小蜗源"`
 		Kw_Mode   string `comment:"接口模式 0: bdapi(需验证), 1: kwdes"`
 		// kw bdapi
-		Kw_Bd_Uid   string `comment:"user.uid"`
-		Kw_Bd_Token string `comment:"user.token"`
-		Kw_Bd_DevId string `comment:"user.device_id"`
+		Kw_Bd_Uid   string `comment:"field user.uid"`
+		Kw_Bd_Token string `comment:"field user.token"`
+		Kw_Bd_DevId string `comment:"field user.device_id"`
 		// kw kwdes
 		Kw_Des_Type   string `comment:"返回格式 0: text, 1: json"`
 		Kw_Des_Header string `comment:"请求头 User-Agent"`

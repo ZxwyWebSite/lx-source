@@ -10,8 +10,8 @@ import (
 
 var (
 	fileInfo = map[string]struct {
-		E string
-		H string
+		E string // 扩展名
+		H string // 专用音质
 	}{
 		sources.Q_128k: {
 			E: `.mp3`,
@@ -38,14 +38,14 @@ var (
 			H: `AI00`,
 		},
 	}
-	qualityMapReverse = map[string]string{
-		`M500`: sources.Q_128k,
-		`M800`: sources.Q_320k,
-		`F000`: sources.Q_flac,
-		`RS01`: sources.Q_fl24,
-		`Q000`: `dolby`,
-		`AI00`: `master`,
-	}
+	// qualityMapReverse = map[string]string{
+	// 	`M500`: sources.Q_128k,
+	// 	`M800`: sources.Q_320k,
+	// 	`F000`: sources.Q_flac,
+	// 	`RS01`: sources.Q_fl24,
+	// 	`Q000`: `dolby`,
+	// 	`AI00`: `master`,
+	// }
 	header = map[string]string{
 		`Referer`: `https://y.qq.com/`,
 	}
