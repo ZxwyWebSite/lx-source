@@ -3,12 +3,12 @@ package wy
 import "lx-source/src/sources"
 
 var (
-	brMap = map[string]string{
-		sources.Q_128k: `128000`,
-		sources.Q_320k: `320000`,
-		sources.Q_flac: `1000000`, //`743625`,`915752`
-		sources.Q_fl24: `2000000`, //`1453955`,`1683323`
-	}
+	// brMap = map[string]string{
+	// 	sources.Q_128k: `128000`,
+	// 	sources.Q_320k: `320000`,
+	// 	sources.Q_flac: `1000000`, //`743625`,`915752`
+	// 	sources.Q_fl24: `2000000`, //`1453955`,`1683323`
+	// }
 	qualityMap = map[string]string{
 		sources.Q_128k: `standard`,
 		sources.Q_320k: `exhigh`,

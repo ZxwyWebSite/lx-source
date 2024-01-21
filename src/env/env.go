@@ -69,9 +69,11 @@ type (
 		ForceFallback bool `comment:"忽略音质限制,强制获取试听音频"`
 	} // `comment:""`
 	Conf_Custom struct {
-		// wy (暂未实现)
-		Wy_Enable bool   `comment:"是否开启小芸源"`
-		Wy_Cookie string `comment:"账号cookie数据"`
+		// wy
+		Wy_Enable           bool   `comment:"是否开启小芸源"`
+		Wy_Cookie           string `comment:"账号cookie数据"`
+		Wy_Refresh_Enable   bool   `comment:"是否启用刷新登录"`
+		Wy_Refresh_Interval int64  `comment:"下次刷新时间 (由程序维护)"`
 
 		// mg (暂未实现)
 		// Mg_Enable bool `comment:"是否开启小蜜源"`
@@ -161,7 +163,8 @@ var (
 			Proxy_Address: `{protocol}://({user}:{password})@{address}:{port}`,
 		},
 		Custom: Conf_Custom{
-			Wy_Enable: true,
+			Wy_Enable:           true,
+			Wy_Refresh_Interval: 1633622400,
 
 			Kw_Enable:     true,
 			Kw_Mode:       `kwdes`,

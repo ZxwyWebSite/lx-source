@@ -1,5 +1,32 @@
 ## Lx-Source/更新日志
 
+#### \# 2024-01-21 v1.0.2-b12-d2 (dev)
++ 新版api结构设计(暂定)
+   ```
+   # 基础接口
+   /
+   /link/{source}/{musicid}/{quality}
+   # 功能接口
+   /api/{source}/{method}/{query}
+       |  源    | 功能   |  参数 |
+   /api/wy/link/?id=xxx&quality=320k&key=xxx
+   # 软件接口
+   /app/{name}/{method}/{?query}
+       | 名称  | 功能  |
+   /app/lxmusic/link (参数通过post传入)
+   /app/musicfree/xxx (计划支持MusicFree)
+   ```
++ 添加wy外链获取v1支持，并改用此版本
++ 计划：统一错误输出，进行以下分类
++ 验证失败(Verify Failed)、实际音质不匹配、无返回数据(No Data)、...
+<!-- + 其它：这一段时间主要完善wy源接口，kg和mg账号源推迟更新 -->
+
+#### \# 2024-01-19 v1.0.2-b12-d2 (dev)
++ 添加wy批量SongUrl获取排序功能
++ 完善wy请求加密支持
++ 添加wy刷新登录模块(beta)
++ 待优化：cookie需要频繁在map和string之间转换
+
 #### \# 2024-01-18 v1.0.2-b12-d1 (dev)
 + 对部分功能实现方式进行优化，去除qualityMapReverse依赖
 + 由于wy修改api验证方式，python版逻辑已不可用，现参考NeteaseCloudMusicApi项目进行修改

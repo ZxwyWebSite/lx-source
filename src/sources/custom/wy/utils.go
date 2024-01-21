@@ -28,24 +28,30 @@ var userAgentMap = map[string]string{
 }
 
 type (
-	// reqCookie  struct{}
+	ReqQuery struct {
+		Cookie map[string]string
+		RealIP string
+		Ids    string
+		Br     string
+		Level  string
+	}
 	reqOptions struct {
-		UA      string
 		Headers map[string]string
+		UA      string
 		RealIP  string
 		IP      string
-		Cookie  interface{}
 		Crypto  string
 		Url     string
+		Cookie  interface{}
 	}
-	reqAnswer struct {
+	ReqAnswer struct {
 		Status int
 		Body   map[string]any
 		Cookie []string
 	}
 )
 
-func createRequest(method, url string, data map[string]any, options reqOptions) (*reqAnswer, error) {
+func createRequest(method, url string, data map[string]any, options reqOptions) (*ReqAnswer, error) {
 	if options.Headers == nil {
 		options.Headers = make(map[string]string)
 	}
@@ -96,26 +102,25 @@ func createRequest(method, url string, data map[string]any, options reqOptions) 
 	var form stdurl.Values
 	switch options.Crypto {
 	case `weapi`:
-		panic(`not support`)
-		// options.Headers[`User-Agent`] = `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 Edg/116.0.1938.69`
-		// reg := regexp.MustCompile(`_csrf=([^(;|$)]+)`)
-		// csrfToken := reg.FindStringSubmatch(options.Headers[`Cookie`])
-		// if len(csrfToken) > 1 {
-		// 	data[`csrf_token`] = csrfToken[1]
-		// } else {
-		// 	data[`csrf_token`] = ``
-		// }
-		// data = weapi(data)
-		// url = wapiReg.ReplaceAllString(url, `weapi`)
+		options.Headers[`User-Agent`] = `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 Edg/116.0.1938.69`
+		reg := regexp.MustCompile(`_csrf=([^(;|$)]+)`)
+		csrfToken := reg.FindStringSubmatch(options.Headers[`Cookie`])
+		if len(csrfToken) > 1 {
+			data[`csrf_token`] = csrfToken[1]
+		} else {
+			data[`csrf_token`] = ``
+		}
+		form = weapi(data)
+		// fmt.Println(form.Encode())
+		url = wapiReg.ReplaceAllString(url, `weapi`)
 	case `linuxapi`:
-		panic(`not support`)
-		// data = linuxapi(
-		// 	method,
-		// 	wapiReg.ReplaceAllString(url, `weapi`),
-		// 	data,
-		// )
-		// options.Headers[`User-Agent`] = `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36`
-		// url = `https://music.163.com/api/linux/forward`
+		form = linuxapi(map[string]any{
+			`method`: method,
+			`url`:    wapiReg.ReplaceAllString(url, `weapi`),
+			`params`: data,
+		})
+		options.Headers[`User-Agent`] = `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36`
+		url = `https://music.163.com/api/linux/forward`
 	case `eapi`:
 		cookie, ok := options.Cookie.(map[string]string)
 		if !ok {
@@ -168,7 +173,7 @@ func createRequest(method, url string, data map[string]any, options reqOptions) 
 	// for k, v := range data {
 	// 	values.Add(k, v)
 	// }
-	answer := reqAnswer{Status: 500, Body: map[string]any{} /*, Cookie: []string{}*/}
+	answer := ReqAnswer{Status: 500, Body: map[string]any{} /*, Cookie: []string{}*/}
 	err := ztool.Net_Request(method, url,
 		strings.NewReader(form.Encode()),
 		[]ztool.Net_ReqHandlerFunc{
@@ -178,17 +183,21 @@ func createRequest(method, url string, data map[string]any, options reqOptions) 
 			func(res *http.Response) error {
 				body, err := io.ReadAll(res.Body)
 				if err == nil {
-					answer.Cookie = res.Header[`Set-Cookie`]
-					reg := regexp.MustCompile(`\s*Domain=[^(;|$)]+;*`)
-					for i, v := range answer.Cookie {
-						answer.Cookie[i] = reg.ReplaceAllString(v, ``)
-					}
-					if options.Crypto == `eapi` && body[0] != '{' {
-						err = json.Unmarshal(decrypt(body), &answer.Body)
-					} else {
-						err = json.Unmarshal(body, &answer.Body)
+					// fmt.Println(`body:`, string(body), "\nstr:", body)
+					if len(body) == 0 {
+						err = errors.New(`nil Body`)
 					}
 					if err == nil {
+						answer.Cookie = res.Header[`Set-Cookie`] //res.Header.Values(`set-cookie`)
+						reg := regexp.MustCompile(`\s*Domain=[^(;|$)]+;*`)
+						for i, v := range answer.Cookie {
+							answer.Cookie[i] = reg.ReplaceAllString(v, ``)
+						}
+						if options.Crypto == `eapi` && body[0] != '{' {
+							err = json.Unmarshal(decrypt(body), &answer.Body)
+						} else {
+							err = json.Unmarshal(body, &answer.Body)
+						}
 						if code, ok := answer.Body[`code`].(string); ok {
 							answer.Body[`code`], err = strconv.Atoi(code)
 						} else {
@@ -212,7 +221,7 @@ func createRequest(method, url string, data map[string]any, options reqOptions) 
 				}
 				if err != nil {
 					answer.Status = 502
-					answer.Body = map[string]any{`code`: 502, `msg`: err}
+					answer.Body = map[string]any{`code`: 502, `msg`: err.Error()}
 					return err
 				}
 				return nil

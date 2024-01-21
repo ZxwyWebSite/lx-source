@@ -4,7 +4,12 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/rsa"
+	"crypto/x509"
 	"encoding/base64"
+	"encoding/pem"
+	"math/rand"
+	_ "unsafe"
 
 	"github.com/ZxwyWebSite/ztool"
 	"github.com/ZxwyWebSite/ztool/x/bytesconv"
@@ -13,33 +18,28 @@ import (
 )
 
 var (
-	// __all__ = []string{`weEncrypt`, `linuxEncrypt`, `eEncrypt`}
-	// MODULUS = ztool.Str_FastConcat(
-	// 	`00e0b509f6259df8642dbc35662901477df22677ec152b5ff68ace615bb7`,
-	// 	`b725152b3ab17a876aea8a5aa76d2e417629ec4ee341f56135fccf695280`,
-	// 	`104e0312ecbda92557c93870114af6c9d05c4f7f0c3685b7a46bee255932`,
-	// 	`575cce10b424d813cfe4875d3e82047b97ddef52741d546b8e289dc6935b`,
-	// 	`3ece0462db0a22b8e7`,
-	// )
-	// PUBKEY   = `010001`
-	// NONCE    = bytesconv.StringToBytes(`0CoJUm6Qyw8W8jud`)
-	// LINUXKEY = bytesconv.StringToBytes(`rFgB&h#%2?^eDg:Q`)
+	ivKey       = bytesconv.StringToBytes(`0102030405060708`)
+	presetKey   = bytesconv.StringToBytes(`0CoJUm6Qyw8W8jud`)
+	linuxapiKey = bytesconv.StringToBytes(`rFgB&h#%2?^eDg:Q`)
+	base62      = bytesconv.StringToBytes(`abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789`)
+	publicKey   = bytesconv.StringToBytes(`-----BEGIN PUBLIC KEY-----
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDgtQn2JZ34ZC28NWYpAUd98iZ37BUrX/aKzmFbt7clFSs6sXqHauqKWqdtLkF2KexO40H1YTX8z2lSgBBOAxLsvaklV8k4cBFK9snQXE9/DDaFt6Rr7iVZMldczhC0JNgTz+SHXT6CBHuX3e9SdB1Ua44oncaTWz7OBGLbCiK45wIDAQAB
+-----END PUBLIC KEY-----`)
 	eapiKey = bytesconv.StringToBytes(`e82ckenh8dichen8`)
-	ivKey   = bytesconv.StringToBytes(`0102030405060708`)
 )
 
-func eapiEncrypt(url, text string) map[string][]string {
-	digest := zcypt.CreateMD5(bytesconv.StringToBytes(ztool.Str_FastConcat(
-		`nobody`, url, `use`, text, `md5forencrypt`,
-	)))
-	data := ztool.Str_FastConcat(
-		url, `-36cd479b6b5-`, text, `-36cd479b6b5-`, digest,
-	)
-	// 注：JSON编码时会自动将[]byte转为string，这里省去一步转换
-	return map[string][]string{
-		`params`: {bytesconv.BytesToString(aesEncrypt(bytesconv.StringToBytes(data), eapiKey, false))},
-	}
-}
+// func eapiEncrypt(url, text string) map[string][]string {
+// 	digest := zcypt.CreateMD5(bytesconv.StringToBytes(ztool.Str_FastConcat(
+// 		`nobody`, url, `use`, text, `md5forencrypt`,
+// 	)))
+// 	data := ztool.Str_FastConcat(
+// 		url, `-36cd479b6b5-`, text, `-36cd479b6b5-`, digest,
+// 	)
+// 	// 注：JSON编码时会自动将[]byte转为string，这里省去一步转换
+// 	return map[string][]string{
+// 		`params`: {bytesconv.BytesToString(aesEncrypt(bytesconv.StringToBytes(data), eapiKey, false))},
+// 	}
+// }
 
 // crypto.js
 
@@ -62,6 +62,54 @@ func aesEncrypt(text, key []byte, iv bool) []byte {
 		return zcypt.Base64Encode(base64.StdEncoding, ciphertext)
 	}
 	return bytes.ToUpper(zcypt.HexEncode(ciphertext))
+}
+
+//go:linkname rsaEncryptNone crypto/rsa.encrypt
+func rsaEncryptNone(*rsa.PublicKey, []byte) ([]byte, error)
+
+func rsaEncrypt(data []byte) string {
+	pblock, _ := pem.Decode(publicKey)
+	pubKey, _ := x509.ParsePKIXPublicKey(pblock.Bytes)
+	// 注：为实现NONE加密手动导出了标准库里的encrypt方法，若编译不过添加以下代码
+	// /usr/local/go/src/crypto/rsa/rsa.go:478
+	// ```
+	// var Encrypt = encrypt // export
+	// ```
+	// 第二种方式：linkname调用，不用改库 https://www.jianshu.com/p/7b3638b47845
+	encData, err := rsaEncryptNone(pubKey.(*rsa.PublicKey), data)
+	if err != nil {
+		panic(err)
+	}
+	return zcypt.HexToString(encData)
+}
+
+func weapi(object map[string]any) map[string][]string {
+	text, err := json.Marshal(object)
+	if err != nil {
+		panic(err)
+	}
+	secretKey := make([]byte, 16)
+	for i := 0; i < 16; i++ {
+		secretKey[i] = base62[rand.Intn(62)]
+	}
+	return map[string][]string{
+		`params`: {bytesconv.BytesToString(aesEncrypt(
+			aesEncrypt(text, presetKey, true),
+			secretKey,
+			true,
+		))},
+		`encSecKey`: {rsaEncrypt(ztool.Sort_ReverseNew(secretKey))},
+	}
+}
+
+func linuxapi(object map[string]any) map[string][]string {
+	text, err := json.Marshal(object)
+	if err != nil {
+		panic(err)
+	}
+	return map[string][]string{
+		`eparams`: {bytesconv.BytesToString(aesEncrypt(text, linuxapiKey, false))},
+	}
 }
 
 func eapi(url string, object map[string]any) map[string][]string {
