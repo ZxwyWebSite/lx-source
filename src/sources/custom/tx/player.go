@@ -91,6 +91,7 @@ type playInfo struct {
 
 func Url(songMid, quality string) (ourl, msg string) {
 	loger := env.Loger.NewGroup(`Tx`)
+	defer loger.Free()
 	infoFile, ok := fileInfo[quality]
 	if !ok || (!env.Config.Custom.Tx_Enable && quality != sources.Q_128k) {
 		msg = sources.E_QNotSupport //`不支持的音质`

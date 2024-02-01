@@ -4,73 +4,82 @@ import (
 	"lx-source/src/env"
 	"lx-source/src/sources"
 	"lx-source/src/sources/custom/utils"
+	wy "lx-source/src/sources/custom/wy/modules"
+	"net/http"
+	"sync"
 
 	"github.com/ZxwyWebSite/ztool"
 	"github.com/ZxwyWebSite/ztool/x/cookie"
 )
 
-type playInfo struct {
-	Data []struct {
-		ID            int         `json:"id"`
-		URL           string      `json:"url"`
-		Br            int         `json:"br"`
-		Size          int         `json:"size"`
-		Md5           string      `json:"md5"`
-		Code          int         `json:"code"`
-		Expi          int         `json:"expi"`
-		Type          string      `json:"type"`
-		Gain          float64     `json:"gain"`
-		Peak          float64     `json:"peak"`
-		Fee           int         `json:"fee"`
-		Uf            interface{} `json:"uf"`
-		Payed         int         `json:"payed"`
-		Flag          int         `json:"flag"`
-		CanExtend     bool        `json:"canExtend"`
-		FreeTrialInfo struct {
-			AlgData      interface{} `json:"algData"`
-			End          int         `json:"end"`
-			FragmentType int         `json:"fragmentType"`
-			Start        int         `json:"start"`
-		} `json:"freeTrialInfo"`
-		Level              string `json:"level"`
-		EncodeType         string `json:"encodeType"`
-		FreeTrialPrivilege struct {
-			ResConsumable      bool        `json:"resConsumable"`
-			UserConsumable     bool        `json:"userConsumable"`
-			ListenType         int         `json:"listenType"`
-			CannotListenReason int         `json:"cannotListenReason"`
-			PlayReason         interface{} `json:"playReason"`
-		} `json:"freeTrialPrivilege"`
-		FreeTimeTrialPrivilege struct {
-			ResConsumable  bool `json:"resConsumable"`
-			UserConsumable bool `json:"userConsumable"`
-			Type           int  `json:"type"`
-			RemainTime     int  `json:"remainTime"`
-		} `json:"freeTimeTrialPrivilege"`
-		URLSource   int         `json:"urlSource"`
-		RightSource int         `json:"rightSource"`
-		PodcastCtrp interface{} `json:"podcastCtrp"`
-		EffectTypes interface{} `json:"effectTypes"`
-		Time        int         `json:"time"`
-	} `json:"data"`
-	Code int `json:"code"`
+var (
+	wy_pool = &sync.Pool{New: func() any { return new(wy.PlayInfo) }}
+	// wv_pool *sync.Pool
+
+	Url func(string, string) (string, string)
+)
+
+func init() {
+	env.Inits.Add(func() {
+		loger := env.Loger.NewGroup(`WyInit`)
+		switch env.Config.Custom.Wy_Mode {
+		case `0`, `builtin`:
+			loger.Debug(`use builtin`)
+			// if env.Config.Source.MusicIdVerify {
+			// 	wv_pool = &sync.Pool{New: func() any { return new(verifyInfo) }}
+			// }
+			// Url = builtin
+		case `1`, `163api`:
+			if env.Config.Custom.Wy_Api_Cookie == `` {
+				loger.Fatal(`使用163api且Cookie参数为空`)
+			}
+			switch env.Config.Custom.Wy_Api_Type {
+			case `0`, `native`:
+				loger.Debug(`use 163api module`)
+				Url = nmModule
+			case `1`, `remote`:
+				loger.Debug(`use 163api custom`)
+				if env.Config.Custom.Wy_Api_Address == `` {
+					loger.Fatal(`自定义接口地址为空`)
+				}
+				if env.Config.Custom.Wy_Api_Address[len(env.Config.Custom.Wy_Api_Address)-1] != '/' {
+					env.Config.Custom.Wy_Api_Address += "/" // 补全尾部斜杠
+				}
+				loger.Info(`使用自定义接口: %v`, env.Config.Custom.Wy_Api_Address)
+				Url = nmCustom
+			default:
+				loger.Fatal(`未定义的调用方式，请检查配置 [Custom].Wy_Api_Type`)
+			}
+		default:
+			loger.Fatal(`未定义的接口模式，请检查配置 [Custom].Wy_Mode`)
+		}
+		loger.Free()
+	})
 }
 
-func Url(songMid, quality string) (ourl, msg string) {
+// func builtin(songMid, quality string) (ourl, msg string) {
+// 	loger := env.Loger.NewGroup(`Wy`)
+// 	defer loger.Free()
+// 	return
+// }
+
+func nmModule(songMid, quality string) (ourl, msg string) {
 	loger := env.Loger.NewGroup(`Wy`)
+	defer loger.Free()
 	rquality, ok := qualityMap[quality]
 	if !ok {
 		msg = sources.E_QNotSupport
 		return
 	}
-	cookies := cookie.Parse(env.Config.Custom.Wy_Cookie)
-	answer, err := SongUrlV1(ReqQuery{
+	cookies := cookie.Parse(env.Config.Custom.Wy_Api_Cookie)
+	answer, err := wy.SongUrlV1(wy.ReqQuery{
 		Cookie: cookie.ToMap(cookies),
 		Ids:    songMid,
 		// Br:     rquality,
 		Level: rquality,
 	})
-	var body playInfo
+	body := wy_pool.Get().(*wy.PlayInfo)
+	defer wy_pool.Put(body)
 	if err == nil {
 		err = ztool.Val_MapToStruct(answer.Body, &body)
 	}
@@ -98,56 +107,42 @@ func Url(songMid, quality string) (ourl, msg string) {
 	return
 }
 
-// func PyUrl(songMid, quality string) (ourl, msg string) {
-// 	loger := env.Loger.NewGroup(`Wy`)
-// 	rquality, ok := qualityMap[quality]
-// 	if !ok {
-// 		msg = sources.E_QNotSupport
-// 		return
-// 	}
-// 	path := `/api/song/enhance/player/url/v1`
-// 	requestUrl := `https://interface.music.163.com/eapi/song/enhance/player/url/v1`
-// 	var body builtin.WyApi_Song
-// 	text := ztool.Str_FastConcat(
-// 		`{"encodeType":"flac","ids":["`, songMid, `"],"level":"`, rquality, `"}`,
-// 	)
-// 	var form url.Values = eapiEncrypt(path, text)
-// 	// form, err := json.Marshal(eapiEncrypt(path, text))
-// 	// if err == nil {
-// 	err := ztool.Net_Request(
-// 		http.MethodPost, requestUrl,
-// 		strings.NewReader(form.Encode()), //bytes.NewReader(form),
-// 		[]ztool.Net_ReqHandlerFunc{ztool.Net_ReqAddHeader(map[string]string{
-// 			`Cookie`: env.Config.Custom.Wy_Cookie,
-// 		})},
-// 		[]ztool.Net_ResHandlerFunc{
-// 			func(res *http.Response) error {
-// 				body, err := io.ReadAll(res.Body)
-// 				if err != nil {
-// 					return err
-// 				}
-// 				loger.Info(`%s`, body)
-// 				return ztool.Err_EsContinue
-// 			},
-// 			ztool.Net_ResToStruct(&body),
-// 		},
-// 	)
-// 	// }
-// 	if err != nil {
-// 		loger.Error(`Request: %s`, err)
-// 		msg = sources.ErrHttpReq
-// 		return
-// 	}
-// 	loger.Debug(`Resp: %+v`, body)
-// 	if len(body.Data) == 0 {
-// 		msg = `No Data：无返回数据`
-// 		return
-// 	}
-// 	data := body.Data[0]
-// 	if data.Level != rquality {
-// 		msg = sources.E_QNotMatch
-// 		return
-// 	}
-// 	ourl = utils.DelQuery(data.URL)
-// 	return
-// }
+func nmCustom(songMid, quality string) (ourl, msg string) {
+	loger := env.Loger.NewGroup(`Wy`)
+	defer loger.Free()
+	rquality, ok := qualityMap[quality]
+	if !ok {
+		msg = sources.E_QNotSupport
+		return
+	}
+	body := wy_pool.Get().(*wy.PlayInfo)
+	defer wy_pool.Put(body)
+	err := ztool.Net_Request(
+		http.MethodGet,
+		ztool.Str_FastConcat(
+			env.Config.Custom.Wy_Api_Address, `song/url/v1`, `?id=`, songMid, `&level=`, rquality,
+			// `&timestamp=`, strconv.FormatInt(time.Now().UnixMilli(), 10),
+		), nil,
+		[]ztool.Net_ReqHandlerFunc{ztool.Net_ReqAddHeaders(map[string]string{
+			`Cookie`: env.Config.Custom.Wy_Api_Cookie,
+		})},
+		[]ztool.Net_ResHandlerFunc{ztool.Net_ResToStruct(&body)},
+	)
+	if err != nil {
+		loger.Error(`SongUrl: %s`, err)
+		msg = sources.ErrHttpReq
+		return
+	}
+	loger.Debug(`Resp: %+v`, body)
+	if len(body.Data) == 0 {
+		msg = `No Data：无返回数据`
+		return
+	}
+	data := body.Data[0]
+	if data.Level != rquality {
+		msg = ztool.Str_FastConcat(`实际音质不匹配: `, rquality, ` <= `, data.Level)
+		return
+	}
+	ourl = utils.DelQuery(data.URL)
+	return
+}

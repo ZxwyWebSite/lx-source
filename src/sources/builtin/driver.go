@@ -7,6 +7,7 @@ import (
 	"lx-source/src/sources"
 	"lx-source/src/sources/custom/kw"
 	"lx-source/src/sources/custom/tx"
+	"lx-source/src/sources/custom/wy"
 	"net/http"
 	"strconv"
 	"sync"
@@ -50,11 +51,21 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 	}
 	// var outlink string
 	jx := env.Loger.NewGroup(`Sources`) //sources.Loger.AppGroup(`builtin`) //env.Loger.NewGroup(`JieXiApis`)
+	defer jx.Free()
 	switch c.Source {
 	case sources.S_wy:
 		if !env.Config.Custom.Wy_Enable {
 			msg = sources.ErrDisable
 			return
+		}
+		if wy.Url != nil {
+			ourl, emsg := wy.Url(c.MusicID, c.Quality)
+			if emsg != `` {
+				msg = emsg
+				return
+			}
+			outlink = ourl
+			break
 		}
 		// 可用性验证
 		if env.Config.Source.MusicIdVerify {
@@ -120,6 +131,10 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 		// jx.Info(`WyLink, RealQuality: %v`, data.Level)
 		outlink = data.URL
 	case sources.S_mg:
+		if !env.Config.Custom.Mg_Enable {
+			msg = sources.ErrDisable
+			return
+		}
 		resp := mg_pool.Get().(*MgApi_Song)
 		defer mg_pool.Put(resp)
 
@@ -134,9 +149,9 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 		jx.Debug(`Mg, Resp: %+v`, resp)
 		if link := resp.Data.PlayURL; link != `` {
 			outlink = `https:` + link
-		} // else {
-		// 	jx.Debug(`Mg, Err: %#v`, resp)
-		// }
+		} else {
+			msg = ztool.Str_FastConcat(resp.Code, `: `, resp.Msg)
+		}
 	case sources.S_kw:
 		if !env.Config.Custom.Kw_Enable {
 			msg = sources.ErrDisable
@@ -149,6 +164,10 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 		}
 		outlink = ourl
 	case sources.S_kg:
+		if !env.Config.Custom.Kg_Enable {
+			msg = sources.ErrDisable
+			return
+		}
 		resp := kg_pool.Get().(*KgApi_Song)
 		defer kg_pool.Put(resp)
 

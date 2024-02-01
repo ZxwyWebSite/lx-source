@@ -19,19 +19,6 @@ type (
 
 func InitHandler(h gin.HandlerFunc) (out []gin.HandlerFunc) {
 	loger := env.Loger.NewGroup(`AuthHandler`)
-	// ApiKey 请求头验证
-	if env.Config.Auth.ApiKey_Enable {
-		loger.Debug(`ApiKeyAuth Enabled`)
-		out = append(out, func(c *gin.Context) {
-			resp.Wrap(c, func() *resp.Resp {
-				if auth := c.Request.Header.Get(`X-LxM-Auth`); auth != env.Config.Auth.ApiKey_Value {
-					loger.Debug(`验证失败: %q`, auth)
-					return &resp.Resp{Code: 3, Msg: `验证Key失败, 请联系网站管理员`}
-				}
-				return nil
-			})
-		})
-	}
 	// RateLimit 速率限制
 	/*
 	 逻辑：
@@ -51,9 +38,16 @@ func InitHandler(h gin.HandlerFunc) (out []gin.HandlerFunc) {
 		block_mem := int(env.Config.Auth.RateLimit_Block * env.Config.Auth.RateLimit_BanNum)
 		bannum := env.Config.Auth.RateLimit_Single + env.Config.Auth.RateLimit_BanNum
 		bantim := int64(env.Config.Auth.RateLimit_BanTim)
+		var getIp func(c *gin.Context) string
+		if env.Config.Main.NgProxy {
+			loger.Info(`已开启反向代理兼容模式`)
+			getIp = func(c *gin.Context) string { return c.ClientIP() }
+		} else {
+			getIp = func(c *gin.Context) string { return c.RemoteIP() }
+		}
 		out = append(out, func(c *gin.Context) {
 			resp.Wrap(c, func() *resp.Resp {
-				rip := c.RemoteIP()
+				rip := getIp(c)
 				if rip == `` {
 					rip = `0.0.0.0`
 				}
@@ -84,21 +78,18 @@ func InitHandler(h gin.HandlerFunc) (out []gin.HandlerFunc) {
 			})
 		})
 	}
+	// ApiKey 请求头验证
+	if env.Config.Auth.ApiKey_Enable {
+		loger.Debug(`ApiKeyAuth Enabled`)
+		out = append(out, func(c *gin.Context) {
+			resp.Wrap(c, func() *resp.Resp {
+				if auth := c.Request.Header.Get(`X-LxM-Auth`); auth != env.Config.Auth.ApiKey_Value {
+					loger.Debug(`验证失败: %q`, auth)
+					return &resp.Resp{Code: 3, Msg: `验证Key失败, 请联系网站管理员`}
+				}
+				return nil
+			})
+		})
+	}
 	return append(out, h)
 }
-
-// 请求验证
-// func AuthHandler(c *gin.Context) {
-// 	loger := env.Loger.NewGroup(`AuthHandler`)
-// 	resp.Wrap(c, func() *resp.Resp {
-// 		// ApiKey
-// 		if env.Config.Auth.ApiKey_Enable {
-// 			if auth := c.Request.Header.Get(`X-LxM-Auth`); auth != env.Config.Auth.ApiKey_Value {
-// 				loger.Debug(`验证失败: %q`, auth)
-// 				return &resp.Resp{Code: 3, Msg: `验证Key失败, 请联系网站管理员`}
-// 			}
-// 		}
-// 		return nil
-// 	})
-// 	// c.Next()
-// }

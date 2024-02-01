@@ -17,6 +17,8 @@ import (
 	"github.com/ZxwyWebSite/ztool/zcypt"
 )
 
+// crypto.js
+
 var (
 	ivKey       = bytesconv.StringToBytes(`0102030405060708`)
 	presetKey   = bytesconv.StringToBytes(`0CoJUm6Qyw8W8jud`)
@@ -27,21 +29,6 @@ MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDgtQn2JZ34ZC28NWYpAUd98iZ37BUrX/aKzmFbt7cl
 -----END PUBLIC KEY-----`)
 	eapiKey = bytesconv.StringToBytes(`e82ckenh8dichen8`)
 )
-
-// func eapiEncrypt(url, text string) map[string][]string {
-// 	digest := zcypt.CreateMD5(bytesconv.StringToBytes(ztool.Str_FastConcat(
-// 		`nobody`, url, `use`, text, `md5forencrypt`,
-// 	)))
-// 	data := ztool.Str_FastConcat(
-// 		url, `-36cd479b6b5-`, text, `-36cd479b6b5-`, digest,
-// 	)
-// 	// 注：JSON编码时会自动将[]byte转为string，这里省去一步转换
-// 	return map[string][]string{
-// 		`params`: {bytesconv.BytesToString(aesEncrypt(bytesconv.StringToBytes(data), eapiKey, false))},
-// 	}
-// }
-
-// crypto.js
 
 func aesEncrypt(text, key []byte, iv bool) []byte {
 	pad := 16 - len(text)%16

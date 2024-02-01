@@ -3,23 +3,19 @@
  * @description Client
  * version 1.0.1
  * @author Zxwy
- * @homepage https://github.com/ZxwyWebSite/lx-source
+ * homepage null
  */
 
 // 脚本配置
 const version = '1.0.3' // 脚本版本
 const apiaddr = 'http://127.0.0.1:1011/' // 服务端地址，末尾加斜杠
-const apipass = '' // 验证密钥，由服务端自动生成 '${apipass}'
+const apipass = '' // 验证密钥，填在单引号内
 const devmode = true // 调试模式
+// const timeout = 60 * 1000 // 请求超时(ms)
 
 // 常量 & 默认值
 const { EVENT_NAMES, request, on, send } = window.lx ?? globalThis.lx
 const defs = { type: 'music', actions: ['musicUrl'] }
-// const defaults = {
-//   type: 'music', // 目前固定为 music
-//   actions: ['musicUrl'], // 目前固定为 ['musicUrl']
-//   qualitys: ['128k', '320k', 'flac', 'flac24bit'], // 当前脚本的该源所支持获取的Url音质，有效的值有：['128k', '320k', 'flac', 'flac24bit']
-// }
 const defheaders = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.84 Safari/537.36 HBPC/12.1.2.300',
   'Accept': 'application/json, text/plain, */*',
@@ -39,6 +35,7 @@ const conf = {
 
 const httpRequest = (url, options) => new Promise((resolve, reject) => {
   options.headers = { ...defheaders, ...options.headers } // 添加默认请求头
+  // options.timeout ? options.timeout : timeout // 添加默认请求超时
   request(url, options, (err, resp) => {
     if (err) return reject(err)
     resolve(resp.body)
@@ -80,8 +77,7 @@ const init = () => {
   'use strict';
   console.log('初始化脚本, 版本: %s, 服务端地址: %s', version, apiaddr)
   var stat = false; var msg = ''; var updUrl = ''; var sourcess = {}
-  httpRequest(apiaddr, { method: 'get' })
-    .catch((err) => { msg = '初始化失败: ' + err ?? '连接服务端超时'; console.log(msg) })
+  httpRequest(apiaddr, { method: 'get', timeout: 1000 * 10 })
     .then((body) => {
       if (!body) { msg = '初始化失败：' + '无返回数据'; return }
       console.log('获取服务端数据成功: %o, 版本: %s', body, body.version)
@@ -104,7 +100,7 @@ const init = () => {
         if (source[v] != null /*== true*/) {
           sourcess[v] = {
             name: v,
-            ...defs, // ...defaults,
+            ...defs,
             qualitys: source[v], // 支持返回音质时启用 使用后端音质表
           }
         }
@@ -112,18 +108,13 @@ const init = () => {
       // 完成初始化
       stat = true
     })
+    .catch((err) => { msg = '初始化失败: ' + err ?? '连接服务端超时'; console.log(msg) })
     .finally(() => {
       // 脚本初始化完成后需要发送inited事件告知应用
       send(EVENT_NAMES.inited, {
         status: stat, // 初始化成功 or 失败 (初始化失败不打开控制台, 使用更新提示接口返回信息)
         openDevTools: stat ? devmode : false, // 是否打开开发者工具，方便用于调试脚本 'devmode' or 'stat ? devmode : false'
         sources: sourcess, // 使用服务端源列表
-        // sources: { // 当前脚本支持的源
-        //   wy: { name: '网易音乐', ...defaults, },
-        //   mg: { name: '咪咕音乐', ...defaults, },
-        //   kw: { name: '酷我音乐', ...defaults, },
-        //   // kg: { name: '酷狗音乐', ...defaults, }, // 暂不支持，仅供换源
-        // },
       })
       // 发送更新提示
       if (msg) send(EVENT_NAMES.updateAlert, { log: '提示：' + msg, updateUrl: updUrl ? apiaddr + updUrl : '' })

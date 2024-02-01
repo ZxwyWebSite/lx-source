@@ -4,9 +4,11 @@ import (
 	"errors"
 	"lx-source/src/caches"
 	"lx-source/src/env"
+	"lx-source/src/middleware/util"
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/ZxwyWebSite/ztool"
 )
@@ -17,10 +19,17 @@ type Cache struct {
 	state bool   // 激活状态
 }
 
-var loger = env.Loger.NewGroup(`Caches`) //caches.Loger.AppGroup(`local`)
+// var loger = env.Loger.NewGroup(`Caches`) //caches.Loger.AppGroup(`local`)
 
-func (c *Cache) getLink(q string) string {
-	return ztool.Str_FastConcat(c.Bind, `/file/`, q) // c.Addr + `file/` + q
+func (c *Cache) getLink(q *caches.Query) (furl string) {
+	// fmt.Printf("%#v\n", q.Request)
+	if env.Config.Cache.Local_Auto {
+		// 注：此方式无法确定是否支持HTTPS，暂时默认HTTP，让Nginx重定向
+		furl = ztool.Str_FastConcat(util.GetPath(q.Request, `link/`), `file/`, q.Query())
+	} else {
+		furl = ztool.Str_FastConcat(c.Bind, `/file/`, q.Query())
+	}
+	return
 }
 
 func (c *Cache) Get(q *caches.Query) string {
@@ -31,7 +40,7 @@ func (c *Cache) Get(q *caches.Query) string {
 	}
 	// env.Cache.Set(q.Query(), struct{}{}, 3600)
 	// }
-	return c.getLink(q.Query())
+	return c.getLink(q)
 	// fpath := filepath.Join(c.Path, q.Source, q.MusicID, q.Quality)
 	// if _, e := os.Stat(fpath); e != nil {
 	// 	return ``
@@ -54,14 +63,23 @@ func (c *Cache) Set(q *caches.Query, l string) string {
 	// 	}
 	// 	loger.Debug(`FFMpeg_Out: %v`, out)
 	// } else {
-	err := ztool.Net_DownloadFile(l, fpath, nil)
-	if err != nil {
-		loger.Error(`DownloadFile: %v`, err)
-		return ``
+	for i := 0; true; i++ {
+		err := ztool.Net_DownloadFile(l, fpath, nil)
+		if err == nil {
+			break
+		}
+		caches.Loger.Error(`DownloadFile: %v, Retry: %v`, err, i)
+		if i == 1 || !strings.Contains(err.Error(), `context deadline exceeded`) {
+			if err := os.Remove(fpath); err != nil {
+				caches.Loger.Error(`RemoveFile: %s`, err)
+			}
+			return ``
+		}
+		time.Sleep(time.Second)
 	}
 	// }
 	// env.Cache.Set(q.Query(), struct{}{}, 3600)
-	return c.getLink(q.Query())
+	return c.getLink(q)
 	// fpath := filepath.Join(c.Path, q.String)
 	// os.MkdirAll(filepath.Dir(fpath), fs.ModePerm)
 	// g := c.Loger.NewGroup(`localcache`)

@@ -222,9 +222,9 @@ func createRequest(method, url string, data map[string]any, options reqOptions) 
 				if err != nil {
 					answer.Status = 502
 					answer.Body = map[string]any{`code`: 502, `msg`: err.Error()}
-					return err
+					// return err
 				}
-				return nil
+				return err // nil
 			},
 		},
 	)

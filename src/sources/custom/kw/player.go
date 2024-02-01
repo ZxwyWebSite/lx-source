@@ -60,12 +60,13 @@ func init() {
 		default:
 			loger.Fatal(`未定义的接口模式，请检查配置 [Custom].Kw_Mode`)
 		}
-		loger = nil
+		loger.Free()
 	})
 }
 
 func bdapi(songMid, quality string) (ourl, msg string) {
 	loger := env.Loger.NewGroup(`Kw`)
+	defer loger.Free()
 	info, ok := fileInfo[quality]
 	if !ok {
 		msg = sources.E_QNotSupport
@@ -100,6 +101,7 @@ func bdapi(songMid, quality string) (ourl, msg string) {
 
 func kwdes(songMid, quality string) (ourl, msg string) {
 	loger := env.Loger.NewGroup(`Kw`)
+	defer loger.Free()
 	infoFile, ok := fileInfo[quality]
 	if !ok {
 		msg = sources.E_QNotSupport

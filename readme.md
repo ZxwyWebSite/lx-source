@@ -11,11 +11,11 @@
 ## ZxwyWebSite/LX-Source
 ### 简介
 + LX-Music 解析源 (洛雪音乐自定义源)
-+ **由于本项目的特殊性，请低调使用，切勿宣传**
++ **由于本项目的特殊性，请低调使用，切勿大肆宣传**<!--（~~传的越多，寄的越快~~）-->
 + 测试阶段，不代表最终品质
 + 验证部分暂未完善，建议仅本地部署，不要公开发布
 + 视频教程：[使用教程.mp4](https://r2eu.zxwy.link/gh/lx-source/v1.0.2-b0.1/%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B.mp4)
-<!-- + **锟斤拷** -->
+<!-- + *手持两把锟斤拷，口中疾呼烫烫烫。 脚踏千朵屯屯屯，笑看万物锘锘锘。* -->
 
 ### 使用
 #### 服务端
@@ -48,8 +48,8 @@
 <!-- + ... -->
 
 ### 音乐源
-+ 内置源 (抓取自网络公开接口) **注：文明上网，请勿滥用**
-+ 账号源 (登录Vip账号解析) **注：可能导致封号，如出问题本项目不负责**
++ 内置源 (抓取自网络公开接口) **注：文明上网，请勿滥用，否则停止后续更新**
++ 账号源 (登录会员账号解析) **注：可能导致封号，如出问题本项目不负责**
 
 ### 开发
 + 环境要求：Golang 1.21 (建议 >=1.20)
@@ -61,18 +61,21 @@
    - pkg/ 依赖包，一般在外部调用，不轻易修改
    - src/ 源码包，用于实现各种功能
       * env 公用变量，需要全局调用的参数
+      * database 数据库相关
       * caches 文件缓存封装
-      * router Gin路由
+      * server Gin路由
       * middleware 请求中间件
       * sources 音乐源
    <!-- - public/ 静态资源，打包进程序，新环境运行自动释放 -->
    <!-- - scripts/ 一些快捷脚本 -->
    - build.go 快速构建脚本 (请先根据本地环境编辑配置)
+   - init.go 初始化检测
+   - menu.go 交互菜单 (暂未实现)
    - main.go 主程序
 
 ### 其它
 + 基于 Golang + Gin框架 编写
-+ 部分功能参考 [Python版](https://github.com/lxmusics/lx-music-api-server-python) 实现
++ 感谢以下项目提供参考：[Python版](https://github.com/lxmusics/lx-music-api-server-python)，[WyApi](https://github.com/ZxwyWebSite/NeteaseCloudMusicApi)，...
 
 ### 更新
 + 见 `update.md`

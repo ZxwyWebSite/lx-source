@@ -1,10 +1,13 @@
 package caches
 
 import (
+	"lx-source/src/env"
+	"net/http"
 	"strings"
 	"sync"
 
 	"github.com/ZxwyWebSite/ztool"
+	"github.com/ZxwyWebSite/ztool/logs"
 )
 
 type (
@@ -15,6 +18,7 @@ type (
 		Quality string // quality 音质 128k / 320k / flac / flac24bit
 		Extname string // rext 扩展名 mp3 / flac (没有前缀点)
 		query   string // 查询字符串缓存
+		Request *http.Request
 	}
 	// 缓存需实现以下接口
 	Cache interface {
@@ -40,7 +44,6 @@ func (*Nullcache) Stat() bool                { return false }
 func (*Nullcache) Init() error               { return nil }
 
 var (
-	// Loger = env.Loger.NewGroup(`Caches`)
 	UseCache Cache = &Nullcache{}
 	// ErrNotInited = errors.New(`缓存策略未初始化`)
 	query_pool = sync.Pool{New: func() any { return new(Query) }}
@@ -110,4 +113,13 @@ func MustNew(c Cache) Cache {
 		panic(err)
 	}
 	return out
+}
+
+var Loger *logs.Logger
+
+// 初始化Loger
+func init() {
+	env.Inits.Add(func() {
+		Loger = env.Loger.NewGroup(`Caches`)
+	})
 }

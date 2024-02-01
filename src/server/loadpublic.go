@@ -1,7 +1,8 @@
 // 静态资源
-package loadpublic
+package server
 
 import (
+	"bytes"
 	"embed"
 	"fmt"
 	"io"
@@ -11,14 +12,16 @@ import (
 	"path/filepath"
 
 	"github.com/ZxwyWebSite/ztool"
+	"github.com/ZxwyWebSite/ztool/x/bytesconv"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/render"
 )
 
 //go:embed public
-var publicEM embed.FS // 打包默认Public目录 src/router/router.go
+var publicEM embed.FS // 打包默认Public目录 src/server/public
 
 // 载入Public目录并设置路由
-func LoadPublic(r *gin.Engine) {
+func loadPublic(r *gin.Engine) {
 	pf := env.Loger.NewGroup(`PublicFS`)
 	dir := ztool.Str_FastConcat(env.RunPath, `/data/public`)
 	publicFS, err := fs.Sub(publicEM, `public`)
@@ -57,6 +60,8 @@ func LoadPublic(r *gin.Engine) {
 			pf.Info(`全部静态资源导出完成, 祝你使用愉快 ^_^`)
 		}
 	}
+	pf.Free()
+	// 使用本地public目录
 	// httpFS = gin.Dir(dir, false)
 	// r.GET(`/:file`, func(c *gin.Context) {
 	// 	file := c.Param(`file`)
@@ -69,7 +74,32 @@ func LoadPublic(r *gin.Engine) {
 	// 		c.FileFromFS(file, httpFS)
 	// 	}
 	// })
-	r.StaticFileFS(`/favicon.ico`, `icon.ico`, httpFS)
-	r.StaticFileFS(`/lx-custom-source.js`, `lx-custom-source.js`, httpFS)
+	// 自动填写源脚本参数
+	if env.Config.Script.Auto > 0 {
+		file, _ := publicFS.Open(`lx-custom-source.js`)
+		data, _ := io.ReadAll(file)
+		file.Close()
+		data = bytes.Replace(data,
+			bytesconv.StringToBytes(`http://127.0.0.1:1011/`),
+			bytesconv.StringToBytes(env.Config.Cache.Local_Bind), 1,
+		)
+		if env.Config.Auth.ApiKey_Enable && env.Config.Script.Auto >= 2 {
+			data = bytes.Replace(data,
+				bytesconv.StringToBytes(`apipass = ''`),
+				bytesconv.StringToBytes(ztool.Str_FastConcat(
+					`apipass = '`, env.Config.Auth.ApiKey_Value, `'`,
+				)), 1,
+			)
+		}
+		r.GET(`/lx-custom-source.js`, func(c *gin.Context) {
+			c.Render(http.StatusOK, render.Data{
+				ContentType: `text/javascript; charset=utf-8`,
+				Data:        data,
+			})
+		})
+	} else {
+		r.StaticFileFS(`/lx-custom-source.js`, `lx-custom-source.js`, httpFS)
+	}
+	r.StaticFileFS(`/favicon.ico`, `lx-icon.ico`, httpFS)
 	r.StaticFS(`/public`, httpFS)
 }

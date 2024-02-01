@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	Version = `1.0.2-b12`
+	Version = `1.0.2-dev`
 )
 
 var (
@@ -26,20 +26,31 @@ var (
      序号           名称                描述
 */
 type (
+	// 系统
 	Conf_Main struct {
-		Debug   bool   `comment:"调试模式"`
-		Listen  string `comment:"监听地址"`
-		Gzip    bool   `comment:"开启GZip (对已压缩的内容使用会产生反效果)"`
-		LogPath string `comment:"文件日志路径，不填禁用"`
-		Print   bool   `comment:"控制台输出"`
-		SysLev  bool   `comment:"(实验性) 设置进程高优先级"`
+		Debug   bool     `comment:"调试模式"`
+		Listen  []string `comment:"监听地址 (多端口以','分隔)"`
+		Gzip    bool     `comment:"开启GZip (对已压缩的内容使用会产生反效果)"`
+		LogPath string   `comment:"文件日志路径，不填禁用"`
+		Print   bool     `comment:"控制台输出 (影响io性能，后台使用建议关闭)"`
+		SysLev  bool     `comment:"(实验性) 设置进程高优先级"`
 		// FFConv  bool   `comment:"(实验性) 使用FFMpeg修复音频(本地缓存)"`
+		NgProxy bool  `comment:"兼容反向代理(beta)"`
+		Timeout int64 `comment:"网络请求超时(单位:秒,海外服务器可适当调大)"`
 	}
+	// 接口
 	Conf_Apis struct {
 		// 预留：后期可能会出一个WebUI，/webui，相关设置
-		// BindAddr string `comment:"外部访问地址，用于生成文件链接"`
-		// LxM_Auth string `comment:"验证Key，自动生成，填写null禁用"`
+		// WebUI
+		// WebUI_Enable bool `comment:"是否开启WebUI相关接口"`
+		// App
+		// App_Enable bool `comment:"是否开启软件接口"`
+		// App Lx-Music
+		// App_LX_Enable bool `comment:"是否开启Lx-Music相关接口"`
+		// App MusicFree
+		// App_MF_Enable bool `comment:"是否开启MusicFree相关接口"`
 	}
+	// 验证
 	Conf_Auth struct {
 		// ApiKey
 		ApiKey_Enable bool   `comment:"是否开启Key验证"`
@@ -47,15 +58,16 @@ type (
 		// 速率限制
 		RateLimit_Enable bool   `comment:"是否开启速率限制"`
 		RateLimit_Block  uint32 `comment:"检测范围，每分区为x秒"` // 每x秒一个分区
-		RateLimit_Global uint32 `comment:"全局速率限制，单位次每x秒(暂未开放)"`
+		// RateLimit_Global uint32 `comment:"全局速率限制，单位次每x秒(暂未开放)"`
 		RateLimit_Single uint32 `comment:"单IP速率限制，单位次每x秒"`
 		RateLimit_BanNum uint32 `comment:"容忍限度，超出限制N次后封禁"`
 		RateLimit_BanTim uint32 `comment:"封禁后每次延长时间"`
 		// 黑白名单
-		BanList_Mode  string   `comment:"名单模式 0: off(关闭), 1: white(白名单), 2: black(黑名单)"`
-		BanList_White []string `comment:"host白名单"`
-		BanList_Black []string `comment:"host黑名单"`
+		// BanList_Mode  string   `comment:"名单模式 0: off(关闭), 1: white(白名单), 2: black(黑名单)"`
+		// BanList_White []string `comment:"host白名单"`
+		// BanList_Black []string `comment:"host黑名单"`
 	}
+	// 来源
 	Conf_Source struct {
 		Mode string `comment:"音乐来源 0: off(关闭 仅本地), 1: builtin(内置), 2: custom(登录账号 暂不支持)"`
 		// 伪装IP
@@ -67,19 +79,32 @@ type (
 		// 验证
 		MusicIdVerify bool `comment:"(beta) 验证音乐ID可用性"`
 		ForceFallback bool `comment:"忽略音质限制,强制获取试听音频"`
+		// 总开关(解决部分源无法彻底禁用问题)?
+		Enable_Wy bool `comment:"是否开启小芸源"`
+		Enable_Mg bool `comment:"是否开启小蜜源"`
+		Enable_Kw bool `comment:"是否开启小蜗源"`
+		Enable_Kg bool `comment:"是否开启小枸源"`
+		Enable_Tx bool `comment:"是否开启小秋源"`
+		Enable_Lx bool `comment:"是否开启小洛源"`
 	} // `comment:""`
+	// 账号
 	Conf_Custom struct {
 		// wy
-		Wy_Enable           bool   `comment:"是否开启小芸源"`
-		Wy_Cookie           string `comment:"账号cookie数据"`
-		Wy_Refresh_Enable   bool   `comment:"是否启用刷新登录"`
-		Wy_Refresh_Interval int64  `comment:"下次刷新时间 (由程序维护)"`
+		Wy_Enable bool   `comment:"是否启用小芸源"`
+		Wy_Mode   string `comment:"获取方式 0: builtin, 1: 163api"`
+		// wy 163api
+		Wy_Api_Type    string `comment:"调用方式 0: native(内置模块), 1: remote(指定地址)"`
+		Wy_Api_Address string `comment:"NeteaseCloudMusicApi项目地址"`
+		Wy_Api_Cookie  string `comment:"账号cookie数据"`
+		// wy refresh
+		// Wy_Refresh_Enable   bool  `comment:"是否启用刷新登录"`
+		// Wy_Refresh_Interval int64 `comment:"下次刷新时间 (由程序维护)"`
 
 		// mg (暂未实现)
-		// Mg_Enable bool `comment:"是否开启小蜜源"`
+		Mg_Enable bool `comment:"是否启用小蜜源"`
 
 		// kw
-		Kw_Enable bool   `comment:"是否开启小蜗源"`
+		Kw_Enable bool   `comment:"是否启用小蜗源"`
 		Kw_Mode   string `comment:"接口模式 0: bdapi(需验证), 1: kwdes"`
 		// kw bdapi
 		Kw_Bd_Uid   string `comment:"field user.uid"`
@@ -90,35 +115,43 @@ type (
 		Kw_Des_Header string `comment:"请求头 User-Agent"`
 
 		// kg (暂未实现)
-		// Kg_Enable bool `comment:"是否开启小枸源"`
+		Kg_Enable bool `comment:"是否启用小枸源"`
 
 		// tx
-		Tx_Enable bool   `comment:"是否开启小秋源"`
+		Tx_Enable bool   `comment:"是否启用小秋源"`
 		Tx_Ukey   string `comment:"Cookie中/客户端的请求体中的（comm.authst）"`
 		Tx_Uuin   string `comment:"key对应的QQ号"`
 		// tx refresh_login
 		Tx_Refresh_Enable   bool  `comment:"是否启动刷新登录"`
 		Tx_Refresh_Interval int64 `comment:"刷新间隔 (由程序维护，非必要无需修改)"`
+
+		// lx (local)
+		// Lx_Enable bool `comment:"是否启用小洛源"`
 	}
+	// 脚本
 	Conf_Script struct {
 		Ver   string `comment:"自定义脚本版本" json:"ver"`
 		Log   string `comment:"更新日志" json:"log"`
 		Url   string `comment:"脚本下载地址 (public目录内文件名)" json:"url"`
 		Force bool   `comment:"强制推送更新" json:"force"`
+		Auto  int    `comment:"自动填写配置(beta) 0: 关闭, 1: 仅api地址, 2: 包含密钥" json:"-"`
 	}
+	// 缓存
 	Conf_Cache struct {
 		Mode     string `comment:"缓存模式 0: off(关闭), 1: local(本地), 2: cloudreve(云盘 未完善)"`
 		LinkMode string `comment:"外链样式 1: static(永久链), 2: dynamic(临时链)"`
 		// 本地
 		Local_Path string `comment:"本地缓存保存路径"`
 		Local_Bind string `comment:"本地缓存外部访问地址"`
+		Local_Auto bool   `comment:"自适应缓存访问地址(beta)"`
 		// 云盘
-		Cloud_Site string `comment:"Cloudreve站点地址"`
-		Cloud_User string `comment:"Cloudreve用户名"`
-		Cloud_Pass string `comment:"Cloudreve密码"`
-		Cloud_Sess string `comment:"Cloudreve会话"`
-		Cloud_Path string `comment:"Cloudreve存储路径"`
+		// Cloud_Site string `comment:"Cloudreve站点地址"`
+		// Cloud_User string `comment:"Cloudreve用户名"`
+		// Cloud_Pass string `comment:"Cloudreve密码"`
+		// Cloud_Sess string `comment:"Cloudreve会话"`
+		// Cloud_Path string `comment:"Cloudreve存储路径"`
 	}
+	// 结构
 	Conf struct {
 		Main   Conf_Main   `comment:"程序主配置"`
 		Apis   Conf_Apis   `comment:"接口设置"`
@@ -135,11 +168,12 @@ var (
 	DefCfg = Conf{
 		Main: Conf_Main{
 			Debug:   false,
-			Listen:  `127.0.0.1:1011`,
+			Listen:  []string{`127.0.0.1:1011`},
 			Gzip:    false,
 			LogPath: `/data/logfile.log`,
 			Print:   true,
 			SysLev:  false,
+			Timeout: 30,
 		},
 		Apis: Conf_Apis{
 			// BindAddr: `http://192.168.10.22:1011/`,
@@ -148,12 +182,12 @@ var (
 			ApiKey_Enable:    true,
 			RateLimit_Enable: false,
 			RateLimit_Block:  30,
-			RateLimit_Global: 1,
+			// RateLimit_Global: 1,
 			RateLimit_Single: 15,
 			RateLimit_BanNum: 5,
 			RateLimit_BanTim: 10,
-			BanList_Mode:     `off`,
-			BanList_White:    []string{`127.0.0.1`},
+			// BanList_Mode:     `off`,
+			// BanList_White:    []string{`127.0.0.1`},
 		},
 		Source: Conf_Source{
 			Mode:          `builtin`,
@@ -161,15 +195,28 @@ var (
 			FakeIP_Value:  `192.168.10.2`,
 			Proxy_Enable:  false,
 			Proxy_Address: `{protocol}://({user}:{password})@{address}:{port}`,
+
+			Enable_Wy: true,
+			Enable_Mg: true,
+			Enable_Kw: true,
+			Enable_Kg: true,
+			Enable_Tx: true,
+			Enable_Lx: true,
 		},
 		Custom: Conf_Custom{
-			Wy_Enable:           true,
-			Wy_Refresh_Interval: 1633622400,
+			Wy_Enable:   true,
+			Wy_Mode:     `builtin`,
+			Wy_Api_Type: `native`,
+			// Wy_Refresh_Interval: 1633622400,
+
+			Mg_Enable: true,
 
 			Kw_Enable:     true,
 			Kw_Mode:       `kwdes`,
 			Kw_Des_Type:   `json`,
 			Kw_Des_Header: `okhttp/3.10.0`,
+
+			Kg_Enable: true,
 
 			Tx_Enable:           false,
 			Tx_Refresh_Enable:   false,
@@ -181,18 +228,18 @@ var (
 			Ver:   `1.0.3`, // 自定义脚本版本
 			Force: true,    // 强制推送更新
 
-			Url: `public/lx-custom-source.js`, // 脚本下载地址
+			Url: `lx-custom-source.js`, // 脚本下载地址
 		},
 		Cache: Conf_Cache{
 			Mode:       `local`, // 缓存模式
 			LinkMode:   `1`,
 			Local_Path: `data/cache`,
 			Local_Bind: `http://127.0.0.1:1011/`,
-			Cloud_Site: `https://cloudreveplus-demo.onrender.com/`,
-			Cloud_User: `admin@cloudreve.org`,
-			Cloud_Pass: `CloudrevePlusDemo`,
-			Cloud_Sess: ``,
-			Cloud_Path: `/Lx-Source/cache`,
+			// Cloud_Site: `https://cloudreveplus-demo.onrender.com/`,
+			// Cloud_User: `admin@cloudreve.org`,
+			// Cloud_Pass: `CloudrevePlusDemo`,
+			// Cloud_Sess: ``,
+			// Cloud_Path: `/Lx-Source/cache`,
 		},
 	}
 	Config = DefCfg

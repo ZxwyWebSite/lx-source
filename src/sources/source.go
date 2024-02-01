@@ -57,10 +57,44 @@ func (*NullSource) GetLink(*caches.Query) (string, string) { return ``, `NullSou
 var UseSource Source = &NullSource{} // = &builtin.Source{}
 
 // 统一错误
-// type Error struct {
-// 	msg string
+// type (
+// 	ErrDef struct {
+// 		Typ string
+// 		Msg string
+// 	}
+// 	ErrQul struct {
+// 		Need string
+// 		Real string
+// 	}
+// )
+
+// func (e *ErrDef) Error() string {
+// 	return ztool.Str_FastConcat(e.Typ, `: `, e.Msg)
+// }
+// func (e *ErrQul) Error() string {
+// 	return ztool.Str_FastConcat(`实际音质不匹配: `, e.Need, ` <= `, e.Real)
 // }
 
-// func (e *Error) Error() string {
-// 	return ztool.Str_FastConcat(e.msg)
+// 验证失败(Verify Failed)
+// func ErrVerify(msg string) error {
+// 	return &ErrDef{
+// 		Typ: Err_Verify,
+// 		Msg: msg,
+// 	}
+// }
+
+// 实际音质不匹配
+// func ErrQuality(need, real string) error {
+// 	return &ErrQul{
+// 		Need: need,
+// 		Real: real,
+// 	}
+// }
+
+// 无返回数据(No Data)
+// func ErrNoData() error {
+// 	return &ErrDef{
+// 		Typ: `No Data`,
+// 		Msg: ``,
+// 	}
 // }
