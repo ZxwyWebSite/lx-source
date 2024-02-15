@@ -13,11 +13,11 @@ var (
 		H string // 专用音质
 	}{
 		sources.Q_128k: {
-			E: `mp3`,
+			E: sources.X_mp3,
 			H: sources.Q_128k,
 		},
 		sources.Q_320k: {
-			E: `mp3`,
+			E: sources.X_mp3,
 			H: sources.Q_320k,
 		},
 		sources.Q_flac: {

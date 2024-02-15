@@ -1,10 +1,11 @@
 package tx
 
 import (
+	"errors"
+	"fmt"
 	"lx-source/src/env"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/ZxwyWebSite/ztool"
 	"github.com/ZxwyWebSite/ztool/logs"
@@ -78,25 +79,15 @@ type refreshData struct {
   第一次载入时会刷新一次测试可用性&同步过期时间 (默认7天)
 */
 
-func refresh(loger *logs.Logger) {
-	// loger := env.Loger.NewGroup(`refresh_login`)
-	if env.Config.Custom.Tx_Ukey == `` || !env.Config.Custom.Tx_Refresh_Enable {
-		return
-	}
-	if time.Now().Unix() < env.Config.Custom.Tx_Refresh_Interval {
+func refresh(loger *logs.Logger, now int64) error {
+	// 前置检测
+	if now < env.Config.Custom.Tx_Refresh_Interval {
 		loger.Debug(`Key未过期，跳过...`)
-		return
+		return nil
 	}
+	// 刷新逻辑 (注：QQ登录最常用所以先判断QHL开头)
 	var body, surl string
-	if strings.HasPrefix(env.Config.Custom.Tx_Ukey, `W_X`) {
-		body = ztool.Str_FastConcat(
-			`{"comm":{"authst":"","ct":"11","cv":"12080008","fPersonality":"0","qq":"","tmeAppID":"qqmusic","tmeLoginMethod":"1","tmeLoginType":"1","v":"12080008"},"req1":{"method":"Login","module":"music.login.LoginServer","param":{"code":"","loginMode":2,"musickey":"`,
-			env.Config.Custom.Tx_Ukey,
-			`","openid":"","refresh_key":"","refresh_token":"","str_musicid":"`,
-			env.Config.Custom.Tx_Uuin,
-			`","unionid":""}}}`,
-		)
-	} else if strings.HasPrefix(env.Config.Custom.Tx_Ukey, `Q_H_L`) {
+	if strings.HasPrefix(env.Config.Custom.Tx_Ukey, `Q_H_L`) {
 		body = ztool.Str_FastConcat(
 			`{"req1":{"method":"QQLogin","module":"QQConnectLogin.LoginServer","param":{"expired_in":7776000,"musicid":`,
 			env.Config.Custom.Tx_Uuin,
@@ -105,43 +96,58 @@ func refresh(loger *logs.Logger) {
 			`"}}}`,
 		)
 		surl = `6`
+	} else if strings.HasPrefix(env.Config.Custom.Tx_Ukey, `W_X`) {
+		body = ztool.Str_FastConcat(
+			`{"comm":{"authst":"","ct":"11","cv":"12080008","fPersonality":"0","qq":"","tmeAppID":"qqmusic","tmeLoginMethod":"1","tmeLoginType":"1","v":"12080008"},"req1":{"method":"Login","module":"music.login.LoginServer","param":{"code":"","loginMode":2,"musickey":"`,
+			env.Config.Custom.Tx_Ukey,
+			`","openid":"","refresh_key":"","refresh_token":"","str_musicid":"`,
+			env.Config.Custom.Tx_Uuin,
+			`","unionid":""}}}`,
+		)
 	} else {
-		loger.Error(`未知的qqmusic_key格式`)
-		env.Config.Custom.Tx_Refresh_Enable = false // 本次启动阻止继续执行
-		return
+		// 致命错误(删除任务)
+		panic(`未知的 qqmusic_key 格式, 请检查配置 [Custom].Tx_Ukey`)
 	}
 	loger.Debug(`Body: %v`, body)
 	var resp refreshData
 	signature := sign(bytesconv.StringToBytes(body))
-	err := ztool.Net_Request(http.MethodPost,
+	err := ztool.Net_Request(
+		http.MethodPost,
 		ztool.Str_FastConcat(`https://u`, surl, `.y.qq.com/cgi-bin/musics.fcg?sign=`, signature),
 		strings.NewReader(body),
-		[]ztool.Net_ReqHandlerFunc{
-			ztool.Net_ReqAddHeaders(header),
-		},
-		[]ztool.Net_ResHandlerFunc{
-			ztool.Net_ResToStruct(&resp),
-		},
+		[]ztool.Net_ReqHandlerFunc{ztool.Net_ReqAddHeaders(header)},
+		[]ztool.Net_ResHandlerFunc{ztool.Net_ResToStruct(&resp)},
 	)
 	if err != nil {
-		loger.Error(`请求Api失败: %s`, err)
-		return
+		// loger.Error(`请求Api失败: %s`, err)
+		return errors.New(`请求Api失败: ` + err.Error())
 	}
 	if resp.Req1.Code != 0 {
-		loger.Warn("刷新登录失败, code: %v\n响应体: %+v", resp.Req1.Code, resp)
-		return
+		// loger.Warn("刷新登录失败, code: %v\n响应体: %+v", resp.Req1.Code, resp)
+		return fmt.Errorf("刷新登录失败, code: %v\n响应体: %+v", resp.Req1.Code, resp)
 	}
 	loger.Info(`刷新登录成功`)
 	env.Config.Custom.Tx_Uuin = resp.Req1.Data.StrMusicId
 	env.Config.Custom.Tx_Ukey = resp.Req1.Data.MusicKey
-	env.Config.Custom.Tx_Refresh_Interval = resp.Req1.Data.ExpiredAt - 86000 // 提前一天
+	env.Config.Custom.Tx_Refresh_Interval = now + 518400 //(每6天刷新一次) //1209600 - 86000 // 14天提前一天
 	loger.Debug(`Resp: %+v`, resp)
 	loger.Debug(`Uuin: %v, Ukey: %v`, resp.Req1.Data.StrMusicId, resp.Req1.Data.MusicKey)
-	loger.Debug(`ExpiresAt: %v`, resp.Req1.Data.ExpiredAt)
+	loger.Debug(`ExpiresAt: %v, Real: %v`, resp.Req1.Data.ExpiredAt, env.Config.Custom.Tx_Refresh_Interval)
 	err = env.Cfg.Save(``)
-	if err != nil {
-		loger.Error(`%s`, err)
-		return
+	// if err != nil {
+	// 	loger.Error(`%s`, err)
+	// 	return
+	// }
+	if err == nil {
+		loger.Info(`数据更新成功`) // 已通过相应数据更新uin和qqmusic_key
 	}
-	loger.Info(`数据更新成功`) // 已通过相应数据更新uin和qqmusic_key
+	return err
+}
+
+func init() {
+	env.Inits.Add(func() {
+		if env.Config.Custom.Tx_Refresh_Enable && env.Config.Custom.Tx_Ukey != `` && env.Config.Custom.Tx_Uuin != `` {
+			env.Tasker.Add(`tx_refresh`, refresh, 86000, true)
+		}
+	})
 }

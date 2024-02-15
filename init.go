@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 
 	"github.com/ZxwyWebSite/ztool"
+	"github.com/ZxwyWebSite/ztool/logs"
 	"github.com/ZxwyWebSite/ztool/zcypt"
 	"github.com/gin-gonic/gin"
 )
@@ -43,9 +44,14 @@ func loadFileLoger() {
 	if env.Config.Main.LogPath != `` {
 		lg := env.Loger.NewGroup(`FileLoger`)
 		printout := env.Config.Main.Print // || env.Config.Main.Debug
-		_, do, err := env.Loger.SetOutFile(ztool.Str_FastConcat(env.RunPath, env.Config.Main.LogPath), printout)
+		f, do, err := env.Loger.SetOutFile(ztool.Str_FastConcat(env.RunPath, env.Config.Main.LogPath), printout)
 		if err == nil {
-			env.Defer.Add(do)
+			// env.Defer.Add(do)
+			env.Defer.Add(func() { do(); f.Close() })
+			env.Tasker.Add(`flog_flush`, func(loger *logs.Logger, now int64) error {
+				loger.Debug(`已写入文件并清理日志缓存`)
+				return do()
+			}, 3600, false)
 			gin.DefaultWriter = env.Loger.GetOutput()
 			gin.ForceConsoleColor()
 			// lg.Info(`文件日志初始化成功`)

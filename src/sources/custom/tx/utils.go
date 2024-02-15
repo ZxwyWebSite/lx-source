@@ -14,28 +14,28 @@ var (
 		H string // 专用音质
 	}{
 		sources.Q_128k: {
-			E: `.mp3`,
+			E: sources.X_mp3,
 			H: `M500`,
 		},
 		sources.Q_320k: {
-			E: `.mp3`,
+			E: sources.X_mp3,
 			H: `M800`,
 		},
 		sources.Q_flac: {
-			E: `.flac`,
+			E: sources.Q_flac,
 			H: `F000`,
 		},
 		sources.Q_fl24: {
-			E: `.flac`,
+			E: sources.Q_flac,
 			H: `RS01`,
 		},
 		`dolby`: {
-			E: `.flac`,
+			E: sources.Q_flac,
 			H: `Q000`,
 		},
 		`master`: {
-			E: `.flac`,
-			H: `AI00`,
+			E: sources.Q_flac,
+			H: `AI00`, // (~~母带音质大部分都是AI提上去的~~)
 		},
 	}
 	// qualityMapReverse = map[string]string{

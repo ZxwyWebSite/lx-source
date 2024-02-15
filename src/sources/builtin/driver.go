@@ -5,9 +5,12 @@ import (
 	"lx-source/src/caches"
 	"lx-source/src/env"
 	"lx-source/src/sources"
+	"lx-source/src/sources/custom/kg"
 	"lx-source/src/sources/custom/kw"
+	"lx-source/src/sources/custom/mg"
 	"lx-source/src/sources/custom/tx"
 	"lx-source/src/sources/custom/wy"
+	wm "lx-source/src/sources/custom/wy/modules"
 	"net/http"
 	"strconv"
 	"sync"
@@ -26,18 +29,21 @@ func (s *Source) Verify(c *caches.Query) (rquery string, ok bool) {
 
 var (
 	// 并发对象池 (用户限制在Router处实现)
-	wy_pool = &sync.Pool{New: func() any { return new(WyApi_Song) }}
+	wy_pool *sync.Pool
 	mg_pool = &sync.Pool{New: func() any { return new(MgApi_Song) }}
 	// kw_pool = &sync.Pool{New: func() any { return new(KwApi_Song) }}
-	kg_pool = &sync.Pool{New: func() any { return new(KgApi_Song) }}
+	// kg_pool = &sync.Pool{New: func() any { return new(KgApi_Song) }}
 	// tx_pool = &sync.Pool{New: func() any { return new(res_tx) }}
 	wv_pool *sync.Pool
 )
 
 func init() {
 	env.Inits.Add(func() {
-		if env.Config.Source.MusicIdVerify {
-			wv_pool = &sync.Pool{New: func() any { return new(WyApi_Vef) }}
+		if env.Config.Source.Enable_Wy {
+			wy_pool = &sync.Pool{New: func() any { return new(wm.PlayInfo) }}
+			if env.Config.Source.MusicIdVerify {
+				wv_pool = &sync.Pool{New: func() any { return new(wm.VerifyInfo) }}
+			}
 		}
 	})
 }
@@ -54,22 +60,17 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 	defer jx.Free()
 	switch c.Source {
 	case sources.S_wy:
-		if !env.Config.Custom.Wy_Enable {
+		if !env.Config.Source.Enable_Wy {
 			msg = sources.ErrDisable
 			return
 		}
 		if wy.Url != nil {
-			ourl, emsg := wy.Url(c.MusicID, c.Quality)
-			if emsg != `` {
-				msg = emsg
-				return
-			}
-			outlink = ourl
+			outlink, msg = wy.Url(c.MusicID, c.Quality)
 			break
 		}
 		// 可用性验证
 		if env.Config.Source.MusicIdVerify {
-			vef := wv_pool.Get().(*WyApi_Vef)
+			vef := wv_pool.Get().(*wm.VerifyInfo)
 			defer wv_pool.Put(vef)
 			vurl := ztool.Str_FastConcat(`https://`, vef_wy, `&id=`, c.MusicID)
 			_, err := ztool.Net_HttpReq(http.MethodGet, vurl, nil, header_wy, &vef)
@@ -85,7 +86,7 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 			}
 		}
 		// 获取外链
-		resp := wy_pool.Get().(*WyApi_Song)
+		resp := wy_pool.Get().(*wm.PlayInfo)
 		defer wy_pool.Put(resp)
 		// 分流逻辑 (暂无其它节点)
 		// urls := [...]string{
@@ -121,19 +122,29 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 		var data = resp.Data[0]
 		if data.Code != 200 || data.FreeTrialInfo != nil {
 			// jx.Error("发生错误, 返回数据:\n%#v", resp)
-			msg = `触发风控或专辑单独收费`
+			msg = `触发风控或专辑单独收费: ` + strconv.Itoa(data.Code)
 			return
 		}
 		if data.Level != rquery {
 			msg = ztool.Str_FastConcat(`实际音质不匹配: `, rquery, ` <= `, data.Level) // 实际音质不匹配: exhigh <= standard
-			return
+			if !env.Config.Source.ForceFallback {
+				return
+			}
 		}
 		// jx.Info(`WyLink, RealQuality: %v`, data.Level)
 		outlink = data.URL
 	case sources.S_mg:
-		if !env.Config.Custom.Mg_Enable {
+		if !env.Config.Source.Enable_Mg {
 			msg = sources.ErrDisable
 			return
+		}
+		if len(c.MusicID) != 11 {
+			msg = sources.E_VefMusicId
+			return
+		}
+		if mg.Url != nil {
+			outlink, msg = mg.Url(c.MusicID, c.Quality)
+			break
 		}
 		resp := mg_pool.Get().(*MgApi_Song)
 		defer mg_pool.Put(resp)
@@ -153,71 +164,89 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 			msg = ztool.Str_FastConcat(resp.Code, `: `, resp.Msg)
 		}
 	case sources.S_kw:
-		if !env.Config.Custom.Kw_Enable {
+		if !env.Config.Source.Enable_Kw {
 			msg = sources.ErrDisable
 			return
 		}
-		ourl, emsg := kw.Url(c.MusicID, c.Quality)
-		if emsg != `` {
-			msg = emsg
-			return
-		}
-		outlink = ourl
+		outlink, msg = kw.Url(c.MusicID, c.Quality)
+		// if emsg != `` {
+		// 	msg = emsg
+		// 	return
+		// }
+		// outlink = ourl
 	case sources.S_kg:
-		if !env.Config.Custom.Kg_Enable {
+		if !env.Config.Source.Enable_Kg {
 			msg = sources.ErrDisable
 			return
 		}
-		resp := kg_pool.Get().(*KgApi_Song)
-		defer kg_pool.Put(resp)
+		if len(c.MusicID) != 32 {
+			msg = sources.E_VefMusicId
+			return
+		}
+		outlink, msg = kg.Url(c.MusicID, c.Quality)
+		// if emsg != `` {
+		// 	msg = emsg
+		// 	return
+		// }
+		// outlink = ourl
+	// case sources.S_kg:
+	// 	if !env.Config.Custom.Kg_Enable {
+	// 		msg = sources.ErrDisable
+	// 		return
+	// 	}
+	// 	resp := kg_pool.Get().(*KgApi_Song)
+	// 	defer kg_pool.Put(resp)
 
-		// sep := strings.Split(c.MusicID, `-`) // 分割 Hash-Album 如 6DC276334F56E22BE2A0E8254D332B45-13097991
-		// alb := func() string {
-		// 	if len(sep) >= 2 {
-		// 		return sep[1]
-		// 	}
-		// 	return ``
-		// }()
-		sep := c.Split()
-		url := ztool.Str_FastConcat(api_kg, `&hash=`, sep[0], `&album_id=`, sep[1], `&_=`, strconv.FormatInt(time.Now().UnixMilli(), 10))
-		// jx.Debug(`Kg, Url: %s`, url)
-		_, err := ztool.Net_HttpReq(http.MethodGet, url, nil, nil, &resp)
-		if err != nil {
-			jx.Error(`Kg, HttpReq: %s`, err)
-			msg = sources.ErrHttpReq
-			return
-		}
-		jx.Debug(`Kg, Resp: %+v`, resp)
-		if resp.ErrCode != 0 {
-			msg = ztool.Str_FastConcat(`Error: `, strconv.Itoa(resp.ErrCode))
-			return
-		}
-		var data KgApi_Data
-		err = ztool.Val_MapToStruct(resp.Data, &data)
-		if err != nil {
-			msg = err.Error()
-			return
-		}
-		if data.PlayBackupURL == `` {
-			if data.PlayURL == `` {
-				msg = sources.ErrNoLink
-				return
-			}
-			outlink = data.PlayURL
-		}
-		outlink = data.PlayBackupURL
+	// 	// sep := strings.Split(c.MusicID, `-`) // 分割 Hash-Album 如 6DC276334F56E22BE2A0E8254D332B45-13097991
+	// 	// alb := func() string {
+	// 	// 	if len(sep) >= 2 {
+	// 	// 		return sep[1]
+	// 	// 	}
+	// 	// 	return ``
+	// 	// }()
+	// 	sep := c.Split()
+	// 	url := ztool.Str_FastConcat(api_kg, `&hash=`, sep[0], `&album_id=`, sep[1], `&_=`, strconv.FormatInt(time.Now().UnixMilli(), 10))
+	// 	// jx.Debug(`Kg, Url: %s`, url)
+	// 	_, err := ztool.Net_HttpReq(http.MethodGet, url, nil, nil, &resp)
+	// 	if err != nil {
+	// 		jx.Error(`Kg, HttpReq: %s`, err)
+	// 		msg = sources.ErrHttpReq
+	// 		return
+	// 	}
+	// 	jx.Debug(`Kg, Resp: %+v`, resp)
+	// 	if resp.ErrCode != 0 {
+	// 		msg = ztool.Str_FastConcat(`Error: `, strconv.Itoa(resp.ErrCode))
+	// 		return
+	// 	}
+	// 	var data KgApi_Data
+	// 	err = ztool.Val_MapToStruct(resp.Data, &data)
+	// 	if err != nil {
+	// 		msg = err.Error()
+	// 		return
+	// 	}
+	// 	if data.PlayBackupURL == `` {
+	// 		if data.PlayURL == `` {
+	// 			msg = sources.ErrNoLink
+	// 			return
+	// 		}
+	// 		outlink = data.PlayURL
+	// 	}
+	// 	outlink = data.PlayBackupURL
 	case sources.S_tx:
-		// sep := c.Split()
+		if !env.Config.Source.Enable_Tx {
+			msg = sources.ErrDisable
+			return
+		}
 		if len(c.MusicID) != 14 {
 			msg = sources.E_VefMusicId
 			return
 		}
-		ourl, emsg := tx.Url(c.MusicID, c.Quality)
-		if emsg != `` {
-			msg = emsg
-			return
-		}
-		outlink = ourl
+		outlink, msg = tx.Url(c.MusicID, c.Quality)
+		// if emsg != `` {
+		// 	msg = emsg
+		// 	return
+		// }
+		// outlink = ourl
 	// case `otx`:
 	// 	resp := tx_pool.Get().(*res_tx)
 	// 	defer tx_pool.Put(resp)

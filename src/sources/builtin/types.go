@@ -10,52 +10,52 @@ import (
 
 type (
 	// 网易音乐接口 (方格/简繁)
-	WyApi_Song struct {
-		Data []struct {
-			ID                 int         `json:"id"`
-			URL                string      `json:"url"`
-			Br                 int         `json:"br"`
-			Size               int         `json:"size"`
-			Md5                string      `json:"md5"`
-			Code               int         `json:"code"`
-			Expi               int         `json:"expi"`
-			Type               string      `json:"type"`
-			Gain               float64     `json:"gain"`
-			Peak               float64     `json:"peak"`
-			Fee                int         `json:"fee"`
-			Uf                 interface{} `json:"uf"`
-			Payed              int         `json:"payed"`
-			Flag               int         `json:"flag"`
-			CanExtend          bool        `json:"canExtend"`
-			FreeTrialInfo      interface{} `json:"freeTrialInfo"`
-			Level              string      `json:"level"`
-			EncodeType         string      `json:"encodeType"`
-			FreeTrialPrivilege struct {
-				ResConsumable      bool        `json:"resConsumable"`
-				UserConsumable     bool        `json:"userConsumable"`
-				ListenType         interface{} `json:"listenType"`
-				CannotListenReason interface{} `json:"cannotListenReason"`
-				PlayReason         interface{} `json:"playReason"`
-			} `json:"freeTrialPrivilege"`
-			FreeTimeTrialPrivilege struct {
-				ResConsumable  bool `json:"resConsumable"`
-				UserConsumable bool `json:"userConsumable"`
-				Type           int  `json:"type"`
-				RemainTime     int  `json:"remainTime"`
-			} `json:"freeTimeTrialPrivilege"`
-			URLSource   int         `json:"urlSource"`
-			RightSource int         `json:"rightSource"`
-			PodcastCtrp interface{} `json:"podcastCtrp"`
-			EffectTypes interface{} `json:"effectTypes"`
-			Time        int         `json:"time"`
-		} `json:"data"`
-		Code int `json:"code"`
-	}
-	WyApi_Vef struct {
-		Code    int16  `json:"code"`
-		Success bool   `json:"success"`
-		Message string `json:"message"`
-	}
+	// WyApi_Song struct {
+	// 	Data []struct {
+	// 		ID                 int         `json:"id"`
+	// 		URL                string      `json:"url"`
+	// 		Br                 int         `json:"br"`
+	// 		Size               int         `json:"size"`
+	// 		Md5                string      `json:"md5"`
+	// 		Code               int         `json:"code"`
+	// 		Expi               int         `json:"expi"`
+	// 		Type               string      `json:"type"`
+	// 		Gain               float64     `json:"gain"`
+	// 		Peak               float64     `json:"peak"`
+	// 		Fee                int         `json:"fee"`
+	// 		Uf                 interface{} `json:"uf"`
+	// 		Payed              int         `json:"payed"`
+	// 		Flag               int         `json:"flag"`
+	// 		CanExtend          bool        `json:"canExtend"`
+	// 		FreeTrialInfo      interface{} `json:"freeTrialInfo"`
+	// 		Level              string      `json:"level"`
+	// 		EncodeType         string      `json:"encodeType"`
+	// 		FreeTrialPrivilege struct {
+	// 			ResConsumable      bool        `json:"resConsumable"`
+	// 			UserConsumable     bool        `json:"userConsumable"`
+	// 			ListenType         interface{} `json:"listenType"`
+	// 			CannotListenReason interface{} `json:"cannotListenReason"`
+	// 			PlayReason         interface{} `json:"playReason"`
+	// 		} `json:"freeTrialPrivilege"`
+	// 		FreeTimeTrialPrivilege struct {
+	// 			ResConsumable  bool `json:"resConsumable"`
+	// 			UserConsumable bool `json:"userConsumable"`
+	// 			Type           int  `json:"type"`
+	// 			RemainTime     int  `json:"remainTime"`
+	// 		} `json:"freeTimeTrialPrivilege"`
+	// 		URLSource   int         `json:"urlSource"`
+	// 		RightSource int         `json:"rightSource"`
+	// 		PodcastCtrp interface{} `json:"podcastCtrp"`
+	// 		EffectTypes interface{} `json:"effectTypes"`
+	// 		Time        int         `json:"time"`
+	// 	} `json:"data"`
+	// 	Code int `json:"code"`
+	// }
+	// WyApi_Vef struct {
+	// 	Code    int16  `json:"code"`
+	// 	Success bool   `json:"success"`
+	// 	Message string `json:"message"`
+	// }
 	// 咪咕音乐接口
 	MgApi_Song struct {
 		Code string `json:"code"`
@@ -88,52 +88,52 @@ type (
 	// 	CurTime   int64  `json:"curTime"`
 	// }
 	// 酷狗试听接口
-	KgApi_Song struct {
-		Status  int `json:"status"`
-		ErrCode int `json:"err_code"`
-		Data    any `json:"data"`
-	}
-	KgApi_Data struct {
-		// Hash       string `json:"hash"`
-		// Timelength int    `json:"timelength"`
-		// Filesize   int    `json:"filesize"`
-		// AudioName  string `json:"audio_name"`
-		// HaveAlbum  int    `json:"have_album"`
-		// AlbumName  string `json:"album_name"`
-		// AlbumID    any    `json:"album_id"`
-		// Img        string `json:"img"`
-		// HaveMv     int    `json:"have_mv"`
-		// VideoID    any    `json:"video_id"`
-		// AuthorName string `json:"author_name"`
-		// SongName   string `json:"song_name"`
-		// Lyrics     string `json:"lyrics"`
-		// AuthorID   any    `json:"author_id"`
-		// Privilege  int    `json:"privilege"`
-		// Privilege2 string `json:"privilege2"`
-		PlayURL string `json:"play_url"`
-		// Authors    []struct {
-		// 	AuthorID      any    `json:"author_id"`
-		// 	AuthorName    string `json:"author_name"`
-		// 	IsPublish     string `json:"is_publish"`
-		// 	SizableAvatar string `json:"sizable_avatar"`
-		// 	EAuthorID     string `json:"e_author_id"`
-		// 	Avatar        string `json:"avatar"`
-		// } `json:"authors"`
-		// IsFreePart         int    `json:"is_free_part"`
-		// Bitrate            int    `json:"bitrate"`
-		// RecommendAlbumID   string `json:"recommend_album_id"`
-		// StoreType          string `json:"store_type"`
-		// AlbumAudioID       int    `json:"album_audio_id"`
-		// IsPublish          int    `json:"is_publish"`
-		// EAuthorID          string `json:"e_author_id"`
-		// AudioID            any    `json:"audio_id"`
-		// HasPrivilege       bool   `json:"has_privilege"`
-		PlayBackupURL string `json:"play_backup_url"`
-		// SmallLibrarySong   int    `json:"small_library_song"`
-		// EncodeAlbumID      string `json:"encode_album_id"`
-		// EncodeAlbumAudioID string `json:"encode_album_audio_id"`
-		// EVideoID           string `json:"e_video_id"`
-	}
+	// KgApi_Song struct {
+	// 	Status  int `json:"status"`
+	// 	ErrCode int `json:"err_code"`
+	// 	Data    any `json:"data"`
+	// }
+	// KgApi_Data struct {
+	// 	// Hash       string `json:"hash"`
+	// 	// Timelength int    `json:"timelength"`
+	// 	// Filesize   int    `json:"filesize"`
+	// 	// AudioName  string `json:"audio_name"`
+	// 	// HaveAlbum  int    `json:"have_album"`
+	// 	// AlbumName  string `json:"album_name"`
+	// 	// AlbumID    any    `json:"album_id"`
+	// 	// Img        string `json:"img"`
+	// 	// HaveMv     int    `json:"have_mv"`
+	// 	// VideoID    any    `json:"video_id"`
+	// 	// AuthorName string `json:"author_name"`
+	// 	// SongName   string `json:"song_name"`
+	// 	// Lyrics     string `json:"lyrics"`
+	// 	// AuthorID   any    `json:"author_id"`
+	// 	// Privilege  int    `json:"privilege"`
+	// 	// Privilege2 string `json:"privilege2"`
+	// 	PlayURL string `json:"play_url"`
+	// 	// Authors    []struct {
+	// 	// 	AuthorID      any    `json:"author_id"`
+	// 	// 	AuthorName    string `json:"author_name"`
+	// 	// 	IsPublish     string `json:"is_publish"`
+	// 	// 	SizableAvatar string `json:"sizable_avatar"`
+	// 	// 	EAuthorID     string `json:"e_author_id"`
+	// 	// 	Avatar        string `json:"avatar"`
+	// 	// } `json:"authors"`
+	// 	// IsFreePart         int    `json:"is_free_part"`
+	// 	// Bitrate            int    `json:"bitrate"`
+	// 	// RecommendAlbumID   string `json:"recommend_album_id"`
+	// 	// StoreType          string `json:"store_type"`
+	// 	// AlbumAudioID       int    `json:"album_audio_id"`
+	// 	// IsPublish          int    `json:"is_publish"`
+	// 	// EAuthorID          string `json:"e_author_id"`
+	// 	// AudioID            any    `json:"audio_id"`
+	// 	// HasPrivilege       bool   `json:"has_privilege"`
+	// 	PlayBackupURL string `json:"play_backup_url"`
+	// 	// SmallLibrarySong   int    `json:"small_library_song"`
+	// 	// EncodeAlbumID      string `json:"encode_album_id"`
+	// 	// EncodeAlbumAudioID string `json:"encode_album_audio_id"`
+	// 	// EVideoID           string `json:"e_video_id"`
+	// }
 	// 腾讯试听接口
 	// res_tx struct {
 	// 	Code int `json:"code"`
@@ -265,7 +265,7 @@ var (
 	api_wy string
 	api_mg string
 	// api_kw string
-	api_kg string = `https://wwwapi.kugou.com/yy/index.php?r=play/getdata&platid=4&mid=1`
+	// api_kg string = `https://wwwapi.kugou.com/yy/index.php?r=play/getdata&platid=4&mid=1`
 	// api_tx string = `https://u.y.qq.com/cgi-bin/musicu.fcg?data=`
 	vef_wy string
 	// Headers

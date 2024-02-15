@@ -85,7 +85,7 @@ func (c *Query) Query() string {
 	return c.query
 }
 
-// 分割查询字符串
+// 分割查询字符串 (已弃用)
 /*
  kg: 分割 Hash-Album 如 "6DC276334F56E22BE2A0E8254D332B45-13097991"
  tx: 分割 songmid-strMediaMid 如 "002fktJg3cmSpC-000V6uuv35Cwnh"

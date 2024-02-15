@@ -9,6 +9,7 @@ import (
 	"encoding/base64"
 
 	"github.com/ZxwyWebSite/ztool/x/bytesconv"
+	"github.com/ZxwyWebSite/ztool/zcypt"
 )
 
 // 常量和数组
@@ -250,8 +251,9 @@ func encrypt(msg []byte, key []byte) []byte {
 }
 
 // base64编码函数
-func Base64_encrypt(msg string) string {
+func base64_encrypt(msg string) string {
 	b1 := encrypt(bytesconv.StringToBytes(msg), SECRET_KEY)
-	s := base64.StdEncoding.EncodeToString(b1)
-	return s //strings.ReplaceAll(s, "\n", ``)
+	return zcypt.Base64ToString(base64.StdEncoding, b1)
+	// s := base64.StdEncoding.EncodeToString(b1)
+	// return s //strings.ReplaceAll(s, "\n", ``)
 }

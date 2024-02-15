@@ -9,10 +9,17 @@ import (
 	"lx-source/src/middleware/util"
 	"lx-source/src/sources"
 	"net/http"
+	"sync/atomic"
+	"time"
 
 	"github.com/ZxwyWebSite/ztool"
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
+)
+
+var (
+	reqnum int64
+	secnum int64
 )
 
 // 载入路由
@@ -23,6 +30,7 @@ func InitRouter() *gin.Engine {
 	if env.Config.Main.Gzip {
 		r.Use(gzip.Gzip(gzip.DefaultCompression, gzip.WithExcludedPaths([]string{"/file/"})))
 	}
+	startime := time.Now().Unix()
 	// 源信息
 	r.GET(`/`, func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
@@ -34,15 +42,21 @@ func InitRouter() *gin.Engine {
 			// `github`: `https://github.com/ZxwyWebSite/lx-source`,
 			// 可用平台
 			`source`: gin.H{
-				sources.S_wy: qmap[0],
-				sources.S_mg: qmap[1],
-				sources.S_kw: qmap[2],
-				sources.S_kg: qmap[3],
-				sources.S_tx: qmap[4],
-				sources.S_lx: qmap[5],
+				sources.S_wy: qmap[sources.I_wy],
+				sources.S_mg: qmap[sources.I_mg],
+				sources.S_kw: qmap[sources.I_kw],
+				sources.S_kg: qmap[sources.I_kg],
+				sources.S_tx: qmap[sources.I_tx],
+				sources.S_lx: qmap[sources.I_lx],
 			},
 			// 自定义源脚本更新
 			`script`: env.DefCfg.Script, //env.Config.Script,
+			// 数据统计
+			`summary`: gin.H{
+				`StartAt`: startime, // 启动时间
+				`Request`: reqnum,   // 解析次数
+				`Success`: secnum,   // 成功次数
+			},
 		})
 	})
 	// 静态文件
@@ -61,6 +75,7 @@ func InitRouter() *gin.Engine {
 	// 	r.Static(`/file`, env.Config.Cache.Local_Path)
 	// }
 	// 功能接口
+	// loadMusic(r.Group(`/api`))
 	// api := r.Group(`/api`)
 	// {
 	// 	api.GET(`/:s/:m/:q`) // {source}/{method}/{query}
@@ -99,11 +114,13 @@ const (
 func linkHandler(c *gin.Context) {
 	resp.Wrap(c, func() *resp.Resp {
 		// 获取传入参数 检查合法性
-		parms := util.ParaMap(c)
+		arr := util.ParaArr(c, `s`, `id`, `q`)
+		s, id, q := arr[0], arr[1], arr[2]
+		// parms := util.ParaMap(c)
 		// getParam := func(p string) string { return strings.TrimSuffix(strings.TrimPrefix(c.Param(p), `/`), `/`) } //strings.Trim(c.Param(p), `/`)
-		s := parms[`s`]   //c.Param(`s`)   //getParam(`s`)   // source 平台 wy, mg, kw
-		id := parms[`id`] //c.Param(`id`) //getParam(`id`) // sid 音乐ID wy: songmid, mg: copyrightId
-		q := parms[`q`]   //c.Param(`q`)   //getParam(`q`)   // quality 音质 128k / 320k / flac / flac24bit
+		// s := parms[`s`]   //c.Param(`s`)   //getParam(`s`)   // source 平台 wy, mg, kw
+		// id := parms[`id`] //c.Param(`id`) //getParam(`id`) // sid 音乐ID wy: songmid, mg: copyrightId
+		// q := parms[`q`]   //c.Param(`q`)   //getParam(`q`)   // quality 音质 128k / 320k / flac / flac24bit
 		env.Loger.NewGroup(`LinkQuery`).Debug(`s: %v, id: %v, q: %v`, s, id, q).Free()
 		if ztool.Chk_IsNilStr(s, q, id) {
 			return &resp.Resp{Code: 6, Msg: `参数不全`} // http.StatusBadRequest
@@ -118,8 +135,7 @@ func linkHandler(c *gin.Context) {
 		// }
 
 		// 查询内存
-		clink, ok := env.Cache.Get(cquery.Query())
-		if ok {
+		if clink, ok := env.Cache.Get(cquery.Query()); ok {
 			if str, ok := clink.(string); ok {
 				env.Loger.NewGroup(`MemCache`).Debug(`MemHIT [%q]=>[%q]`, cquery.Query(), str).Free()
 				if str == `` {
@@ -144,15 +160,17 @@ func linkHandler(c *gin.Context) {
 		} else {
 			sc.Debug(`Disabled`)
 		}
+		atomic.AddInt64(&reqnum, 1)
 		// 解析歌曲外链
 		outlink, emsg := sources.UseSource.GetLink(cquery)
 		if emsg != `` {
 			if emsg == sources.Err_Verify { // Verify Failed: 不支持的平台或音质
 				return &resp.Resp{Code: 6, Msg: ztool.Str_FastConcat(emsg, `: 不支持的平台或音质`)}
 			}
-			env.Cache.Set(cquery.Query(), ``, 600) // 发生错误的10分钟内禁止再次查询
-			return &resp.Resp{Code: 2, Msg: emsg}
+			env.Cache.Set(cquery.Query(), outlink, 600) // 发生错误的10分钟内禁止再次查询
+			return &resp.Resp{Code: 2, Msg: emsg, Data: outlink}
 		}
+		atomic.AddInt64(&secnum, 1)
 		// 缓存并获取直链 !(s == `kg` || (s == `tx` && !tx_en)) => (s != `kg` && (s != `tx` || tx_en))
 		if outlink != `` && cstat && cquery.Source != sources.S_kg && (cquery.Source != sources.S_tx || env.Config.Custom.Tx_Enable) {
 			sc.Debug(`Method: Set, Link: %v`, outlink)

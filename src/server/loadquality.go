@@ -1,6 +1,9 @@
 package server
 
-import "lx-source/src/env"
+import (
+	"lx-source/src/env"
+	"lx-source/src/sources"
+)
 
 var (
 	// 默认音质
@@ -17,40 +20,44 @@ func loadQMap() [][]string {
 	// 0.wy
 	if env.Config.Source.Enable_Wy {
 		if env.Config.Custom.Wy_Enable {
-			m[0] = defQuality
+			m[sources.I_wy] = defQuality
 		} else {
-			m[0] = tstQuality
+			m[sources.I_wy] = tstQuality
 		}
 	}
 	// 1.mg
 	if env.Config.Source.Enable_Mg {
 		if env.Config.Custom.Mg_Enable {
-			m[1] = defQuality
+			m[sources.I_mg] = defQuality
+		} else {
+			m[sources.I_mg] = tstQuality
 		}
 	}
 	// 2.kw
 	if env.Config.Source.Enable_Kw {
 		if env.Config.Custom.Kw_Enable {
-			m[2] = stdQuality
+			m[sources.I_kw] = stdQuality
 		}
 	}
 	// 3.kg
 	if env.Config.Source.Enable_Kg {
 		if env.Config.Custom.Kg_Enable {
-			m[3] = tstQuality
+			m[sources.I_kg] = defQuality
+		} else {
+			m[sources.I_kg] = tstQuality
 		}
 	}
 	// 4.tx
 	if env.Config.Source.Enable_Tx {
 		if env.Config.Custom.Tx_Enable {
-			m[4] = stdQuality
+			m[sources.I_tx] = stdQuality
 		} else {
-			m[4] = tstQuality
+			m[sources.I_tx] = tstQuality
 		}
 	}
 	// 5.lx
-	// if env.Config.Source.Enable_Lx {
-	// 	m[5] = defQuality
-	// }
+	if env.Config.Source.Enable_Lx {
+		m[sources.I_lx] = defQuality
+	}
 	return m
 }

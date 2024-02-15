@@ -28,7 +28,7 @@ func init() {
 		loger := env.Loger.NewGroup(`KwInit`)
 		switch env.Config.Custom.Kw_Mode {
 		case `0`, `bdapi`:
-			loger.Debug(`Use bdapi`)
+			loger.Debug(`use bdapi`)
 			if ztool.Chk_IsNilStr(
 				env.Config.Custom.Kw_Bd_Uid,
 				env.Config.Custom.Kw_Bd_Token,
@@ -43,11 +43,11 @@ func init() {
 		case `1`, `kwdes`:
 			switch env.Config.Custom.Kw_Des_Type {
 			case `0`, `text`:
-				loger.Debug(`Use kwdes_text`)
+				loger.Debug(`use kwdes text`)
 				convtype = `convert_url2`
 				// desParse = txtParse
 			case `1`, `json`:
-				loger.Debug(`Use kwdes_json`)
+				loger.Debug(`use kwdes json`)
 				convtype = `convert_url_with_sign`
 				// desParse = ztool.Net_ResToStruct
 				parsemod = true
@@ -109,7 +109,7 @@ func kwdes(songMid, quality string) (ourl, msg string) {
 	}
 	target_url := ztool.Str_FastConcat(
 		`https://mobi.kuwo.cn/mobi.s?f=kuwo&q=`,
-		Base64_encrypt(ztool.Str_FastConcat(
+		base64_encrypt(ztool.Str_FastConcat(
 			`user=0&android_id=0&prod=kwplayer_ar_8.5.5.0&corp=kuwo&newver=3&vipver=8.5.5.0&source=kwplayer_ar_8.5.5.0_apk_keluze.apk&p2p=1&notrace=0`,
 			`&type=`, convtype,
 			`&br=`, infoFile.H, infoFile.E,

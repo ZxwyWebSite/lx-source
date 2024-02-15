@@ -25,6 +25,29 @@ func ParaMap(c *gin.Context) map[string]string {
 	return parms
 }
 
+// 将路由参数转为Array
+/*
+ ParaArr(c, `id`, `s`, `xxx`) => [
+	`musicId`,
+	`source`,
+	``,
+ ]
+*/
+func ParaArr(c *gin.Context, s ...string) []string {
+	parmlen := len(c.Params)
+	parslen := len(s)
+	out := make([]string, parslen)
+	for im := 0; im < parmlen; im++ {
+		obj := c.Params[im]
+		for is := 0; is < parslen; is++ {
+			if s[is] == obj.Key {
+				out[is] = obj.Value
+			}
+		}
+	}
+	return out
+}
+
 var pathCache string
 
 func init() {

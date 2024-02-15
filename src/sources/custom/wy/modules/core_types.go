@@ -19,7 +19,7 @@ type (
 			Payed         int         `json:"payed"`
 			Flag          int         `json:"flag"`
 			CanExtend     bool        `json:"canExtend"`
-			FreeTrialInfo struct {
+			FreeTrialInfo *struct {
 				AlgData      interface{} `json:"algData"`
 				End          int         `json:"end"`
 				FragmentType int         `json:"fragmentType"`

@@ -14,7 +14,7 @@ const devmode = true // 调试模式
 // const timeout = 60 * 1000 // 请求超时(ms)
 
 // 常量 & 默认值
-const { EVENT_NAMES, request, on, send } = window.lx ?? globalThis.lx
+const { EVENT_NAMES, request, on, send } = globalThis.lx
 const defs = { type: 'music', actions: ['musicUrl'] }
 const defheaders = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.84 Safari/537.36 HBPC/12.1.2.300',
@@ -45,8 +45,8 @@ const httpRequest = (url, options) => new Promise((resolve, reject) => {
 const musicUrl = async (source, info, quality) => {
   const start = new Date().getTime();
   const id = info.hash ?? info.copyrightId ?? info.songmid // 音乐id kg源为hash, mg源为copyrightId
-  const ext = source == 'kg' ? info.albumId : '' //source == 'tx' ? info.strMediaMid
-  const query = `${source}/${id}${(ext != '' && ext != void 0) ? '-' + ext : ''}/${quality}`
+  //const ext = source == 'kg' ? info.albumId : '' //source == 'tx' ? info.strMediaMid
+  const query = `${source}/${id}/${quality}` //${(ext != '' && ext != void 0) ? '-' + ext : ''}
   console.log('创建任务: %s, 音乐信息: %O', query, info)
   const body = await httpRequest(`${apiaddr}link/${query}`, { method: 'get' });
   console.log('返回数据: %O', body, `, 耗时 ${new Date().getTime() - start} ms`)

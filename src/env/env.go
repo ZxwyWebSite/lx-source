@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	Version = `1.0.2-dev`
+	Version = `1.0.3-pre`
 )
 
 var (
@@ -78,7 +78,7 @@ type (
 		Proxy_Address string `comment:"代理地址 (支持http, socks)"`
 		// 验证
 		MusicIdVerify bool `comment:"(beta) 验证音乐ID可用性"`
-		ForceFallback bool `comment:"忽略音质限制,强制获取试听音频"`
+		ForceFallback bool `comment:"忽略音质限制,强制返回链接(部分支持)"`
 		// 总开关(解决部分源无法彻底禁用问题)?
 		Enable_Wy bool `comment:"是否开启小芸源"`
 		Enable_Mg bool `comment:"是否开启小蜜源"`
@@ -97,11 +97,17 @@ type (
 		Wy_Api_Address string `comment:"NeteaseCloudMusicApi项目地址"`
 		Wy_Api_Cookie  string `comment:"账号cookie数据"`
 		// wy refresh
-		// Wy_Refresh_Enable   bool  `comment:"是否启用刷新登录"`
-		// Wy_Refresh_Interval int64 `comment:"下次刷新时间 (由程序维护)"`
+		Wy_Refresh_Enable   bool  `comment:"是否启用刷新登录"`
+		Wy_Refresh_Interval int64 `comment:"下次刷新时间 (由程序维护)"`
 
-		// mg (暂未实现)
-		Mg_Enable bool `comment:"是否启用小蜜源"`
+		// mg
+		Mg_Enable bool   `comment:"是否启用小蜜源"`
+		Mg_Mode   string `comment:"获取方式 0: builtin, 1: custom"`
+		// mg custom
+		Mg_Usr_VerId string `comment:"field user.aversionid"`
+		Mg_Usr_Token string `comment:"field user.token"`
+		Mg_Usr_OSVer string `comment:"field user.osversion"`
+		Mg_Usr_ReqUA string `comment:"field user.useragent"`
 
 		// kw
 		Kw_Enable bool   `comment:"是否启用小蜗源"`
@@ -114,8 +120,10 @@ type (
 		Kw_Des_Type   string `comment:"返回格式 0: text, 1: json"`
 		Kw_Des_Header string `comment:"请求头 User-Agent"`
 
-		// kg (暂未实现)
-		Kg_Enable bool `comment:"是否启用小枸源"`
+		// kg
+		Kg_Enable bool   `comment:"是否启用小枸源"`
+		Kg_token  string `comment:"field user.token"`
+		Kg_userId string `comment:"field user.userid"`
 
 		// tx
 		Tx_Enable bool   `comment:"是否启用小秋源"`
@@ -201,22 +209,26 @@ var (
 			Enable_Kw: true,
 			Enable_Kg: true,
 			Enable_Tx: true,
-			Enable_Lx: true,
+			Enable_Lx: false,
 		},
 		Custom: Conf_Custom{
-			Wy_Enable:   true,
-			Wy_Mode:     `builtin`,
-			Wy_Api_Type: `native`,
-			// Wy_Refresh_Interval: 1633622400,
+			Wy_Enable:           true,
+			Wy_Mode:             `builtin`,
+			Wy_Api_Type:         `native`,
+			Wy_Refresh_Interval: 1633622400,
 
-			Mg_Enable: true,
+			Mg_Enable:    true,
+			Mg_Mode:      `builtin`,
+			Mg_Usr_OSVer: `10`,
+			Mg_Usr_ReqUA: `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36`,
 
 			Kw_Enable:     true,
 			Kw_Mode:       `kwdes`,
 			Kw_Des_Type:   `json`,
 			Kw_Des_Header: `okhttp/3.10.0`,
 
-			Kg_Enable: true,
+			Kg_Enable: false,
+			Kg_userId: `0`,
 
 			Tx_Enable:           false,
 			Tx_Refresh_Enable:   false,

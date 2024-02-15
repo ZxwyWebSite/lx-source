@@ -1,11 +1,5 @@
 package tx
 
-import (
-	"lx-source/src/env"
-
-	"github.com/ZxwyWebSite/ztool/logs"
-)
-
 // func Info(songMid string) (info any, msg string) {
 // 	req, emsg := getMusicInfo(songMid)
 // 	if emsg != `` {
@@ -29,14 +23,3 @@ import (
 // 	}
 // 	return
 // }
-
-func init() {
-	env.Inits.Add(func() {
-		if env.Config.Custom.Tx_Refresh_Enable {
-			env.Tasker.Add(`tx_refresh`, func(l *logs.Logger) error {
-				refresh(l)
-				return nil
-			}, 86000, true)
-		}
-	})
-}

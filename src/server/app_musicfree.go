@@ -12,7 +12,7 @@ import (
 func loadMusicFree(mf *gin.RouterGroup) {
 	// 插件订阅
 	mf.GET(`/subscribe`, func(c *gin.Context) {
-		slist := []string{sources.S_wy, sources.S_mg, sources.S_kw, sources.S_kg, sources.S_tx, sources.S_lx}
+		slist := sources.S_al
 		type plugins struct {
 			Name    string `json:"name"`
 			Url     string `json:"url"`

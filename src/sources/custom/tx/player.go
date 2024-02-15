@@ -8,62 +8,6 @@ import (
 	"github.com/ZxwyWebSite/ztool/x/bytesconv"
 )
 
-type playInfo struct {
-	Code int `json:"code"`
-	Data struct {
-		Uin          string   `json:"uin"`
-		Retcode      int      `json:"retcode"`
-		VerifyType   int      `json:"verify_type"`
-		LoginKey     string   `json:"login_key"`
-		Msg          string   `json:"msg"`
-		Sip          []string `json:"sip"`
-		Thirdip      []string `json:"thirdip"`
-		Testfile2G   string   `json:"testfile2g"`
-		Testfilewifi string   `json:"testfilewifi"`
-		Midurlinfo   []struct {
-			Songmid           string `json:"songmid"`
-			Filename          string `json:"filename"`
-			Purl              string `json:"purl"`
-			Errtype           string `json:"errtype"`
-			P2Pfromtag        int    `json:"p2pfromtag"`
-			Qmdlfromtag       int    `json:"qmdlfromtag"`
-			CommonDownfromtag int    `json:"common_downfromtag"`
-			VipDownfromtag    int    `json:"vip_downfromtag"`
-			Pdl               int    `json:"pdl"`
-			Premain           int    `json:"premain"`
-			Hisdown           int    `json:"hisdown"`
-			Hisbuy            int    `json:"hisbuy"`
-			UIAlert           int    `json:"uiAlert"`
-			Isbuy             int    `json:"isbuy"`
-			Pneedbuy          int    `json:"pneedbuy"`
-			Pneed             int    `json:"pneed"`
-			Isonly            int    `json:"isonly"`
-			Onecan            int    `json:"onecan"`
-			Result            int    `json:"result"`
-			Tips              string `json:"tips"`
-			Opi48Kurl         string `json:"opi48kurl"`
-			Opi96Kurl         string `json:"opi96kurl"`
-			Opi192Kurl        string `json:"opi192kurl"`
-			Opiflackurl       string `json:"opiflackurl"`
-			Opi128Kurl        string `json:"opi128kurl"`
-			Opi192Koggurl     string `json:"opi192koggurl"`
-			Wififromtag       string `json:"wififromtag"`
-			Flowfromtag       string `json:"flowfromtag"`
-			Wifiurl           string `json:"wifiurl"`
-			Flowurl           string `json:"flowurl"`
-			Vkey              string `json:"vkey"`
-			Opi30Surl         string `json:"opi30surl"`
-			Ekey              string `json:"ekey"`
-			AuthSwitch        int    `json:"auth_switch"`
-			Subcode           int    `json:"subcode"`
-			Opi96Koggurl      string `json:"opi96koggurl"`
-			AuthSwitch2       int    `json:"auth_switch2"`
-		} `json:"midurlinfo"`
-		Servercheck string `json:"servercheck"`
-		Expiration  int    `json:"expiration"`
-	} `json:"data"`
-}
-
 /*
  音乐URL获取逻辑：
   if需要付费播放and无账号信息:
@@ -98,11 +42,12 @@ func Url(songMid, quality string) (ourl, msg string) {
 		return
 	}
 	infoBody, emsg := getMusicInfo(songMid)
-	loger.Debug(`infoBody: %+v`, infoBody)
 	if emsg != `` {
+		loger.Error(`GetInfo: %v`, emsg)
 		msg = emsg
 		return
 	}
+	loger.Debug(`infoBody: %+v`, infoBody)
 	var uauthst, uuin string = env.Config.Custom.Tx_Ukey, env.Config.Custom.Tx_Uuin
 	if uuin == `` || !env.Config.Custom.Tx_Enable {
 		uuin = `1535153710`
@@ -110,11 +55,23 @@ func Url(songMid, quality string) (ourl, msg string) {
 	var strFileName string
 	tryLink := infoBody.TrackInfo.Pay.PayPlay == 1 && /*uauthst == ``&&*/ !env.Config.Custom.Tx_Enable
 	if tryLink {
-		strFileName = ztool.Str_FastConcat(`RS02`, infoBody.TrackInfo.Vs[0], `.mp3`)
+		strFileName = ztool.Str_FastConcat(`RS02`, infoBody.TrackInfo.Vs[0], `.`, sources.X_mp3)
 	} else {
-		strFileName = ztool.Str_FastConcat(infoFile.H, infoBody.TrackInfo.File.MediaMid, infoFile.E)
+		strFileName = ztool.Str_FastConcat(infoFile.H, infoBody.TrackInfo.File.MediaMid, `.`, infoFile.E)
 	}
-	requestBody := ztool.Str_FastConcat(`{"comm":{"authst":"`, uauthst, `","ct":"26","cv":"2010101","qq":"`, uuin, `","v":"2010101"},"req_0":{"method":"CgiGetVkey","module":"vkey.GetVkeyServer","param":{"filename":["`, strFileName, `"],"guid":"114514","loginflag":1,"platform":"20","songmid":["`, songMid, `"],"songtype":[0],"uin":"10086"}}}`)
+	requestBody := ztool.Str_FastConcat(
+		`{"comm":{"authst":"`,
+		uauthst,
+		`","ct":"26","cv":"2010101","qq":"`,
+		uuin,
+		`","v":"2010101"},"req_0":{"method":"CgiGetVkey","module":"vkey.GetVkeyServer","param":{"filename":["`,
+		strFileName,
+		`"],"guid":"20211008","loginflag":1,"platform":"20","songmid":["`,
+		songMid,
+		`"],"songtype":[0],"uin":"`,
+		uuin,
+		`"}}}`,
+	)
 	var infoResp struct {
 		Code int `json:"code"`
 		// Ts      int64    `json:"ts"`
@@ -124,6 +81,7 @@ func Url(songMid, quality string) (ourl, msg string) {
 	}
 	err := signRequest(bytesconv.StringToBytes(requestBody), &infoResp)
 	if err != nil {
+		loger.Error(`Request: %s`, err)
 		msg = err.Error()
 		return
 	}

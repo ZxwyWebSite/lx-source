@@ -6,6 +6,7 @@ import (
 	"lx-source/src/sources/custom/utils"
 	wy "lx-source/src/sources/custom/wy/modules"
 	"net/http"
+	"strconv"
 	"sync"
 
 	"github.com/ZxwyWebSite/ztool"
@@ -94,9 +95,15 @@ func nmModule(songMid, quality string) (ourl, msg string) {
 		return
 	}
 	data := body.Data[0]
+	if data.Code != 200 {
+		msg = `触发风控或专辑单独收费: ` + strconv.Itoa(data.Code)
+		return
+	}
 	if data.Level != rquality {
 		msg = ztool.Str_FastConcat(`实际音质不匹配: `, rquality, ` <= `, data.Level)
-		return
+		if !env.Config.Source.ForceFallback {
+			return
+		}
 	}
 	// br := strconv.Itoa(data.Br) // 注：由于flac返回br值不固定，暂无法进行比较
 	// if br != rquality && !ztool.Chk_IsMatch(br, sources.Q_flac, sources.Q_fl24) {
@@ -139,9 +146,15 @@ func nmCustom(songMid, quality string) (ourl, msg string) {
 		return
 	}
 	data := body.Data[0]
+	if data.Code != 200 {
+		msg = `触发风控或专辑单独收费: ` + strconv.Itoa(data.Code)
+		return
+	}
 	if data.Level != rquality {
 		msg = ztool.Str_FastConcat(`实际音质不匹配: `, rquality, ` <= `, data.Level)
-		return
+		if !env.Config.Source.ForceFallback {
+			return
+		}
 	}
 	ourl = utils.DelQuery(data.URL)
 	return

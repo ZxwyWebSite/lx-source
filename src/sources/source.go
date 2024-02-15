@@ -13,6 +13,10 @@ const (
 	Q_320k = `320k`
 	Q_flac = `flac`
 	Q_fl24 = `flac24bit`
+	// 文件扩展
+	// X_aac  = `aac`
+	X_mp3 = `mp3`
+	// X_flac = Q_flac
 	// 通用平台
 	S_wy = `wy` // 小芸
 	S_mg = `mg` // 小蜜
@@ -29,6 +33,19 @@ const (
 	ErrHttpReq = `无法连接解析接口`
 	ErrNoLink  = `无法获取试听链接`
 	ErrDisable = `该音乐源已被禁用`
+)
+
+const (
+	I_wy = iota
+	I_mg
+	I_kw
+	I_kg
+	I_tx
+	I_lx
+)
+
+var (
+	S_al = []string{S_wy, S_mg, S_kw, S_kg, S_tx, S_lx} // 全部平台
 )
 
 // 源查询接口
