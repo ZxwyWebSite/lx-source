@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	Version = `1.0.3-pre`
+	Version = `1.0.3-fix`
 )
 
 var (
@@ -121,9 +121,19 @@ type (
 		Kw_Des_Header string `comment:"请求头 User-Agent"`
 
 		// kg
-		Kg_Enable bool   `comment:"是否启用小枸源"`
+		Kg_Enable bool `comment:"是否启用小枸源"`
+		// kg client
+		Kg_Client_AppId     string `comment:"酷狗音乐的appid，官方安卓为1005，官方PC为1001（client.appid）"`
+		Kg_Client_SignKey   string `comment:"客户端signature采用的key值，需要与appid对应（client.signatureKey）"`
+		Kg_Client_Version   string `comment:"客户端versioncode，pidversionsecret可能随此值而变化（client.clientver）"`
+		Kg_Client_PidVerSec string `comment:"获取URL时所用的key值计算验证值（client.pidversionsecret）"`
+		Kg_Client_Pid       string `comment:"field client.pid"`
+		// kg user
 		Kg_token  string `comment:"field user.token"`
 		Kg_userId string `comment:"field user.userid"`
+		// kg lite_sign_in
+		Kg_Lite_Enable   bool  `comment:"是否启用概念版自动签到，仅在appid=3116时运行"`
+		Kg_Lite_Interval int64 `comment:"调用时间，自动刷新"`
 
 		// tx
 		Tx_Enable bool   `comment:"是否启用小秋源"`
@@ -227,8 +237,13 @@ var (
 			Kw_Des_Type:   `json`,
 			Kw_Des_Header: `okhttp/3.10.0`,
 
-			Kg_Enable: false,
-			Kg_userId: `0`,
+			Kg_Enable:           false,
+			Kg_Client_AppId:     `1005`,
+			Kg_Client_SignKey:   `OIlwieks28dk2k092lksi2UIkp`,
+			Kg_Client_Version:   `12029`,
+			Kg_Client_PidVerSec: `57ae12eb6890223e355ccfcb74edf70d`,
+			Kg_Client_Pid:       `2`,
+			Kg_userId:           `0`,
 
 			Tx_Enable:           false,
 			Tx_Refresh_Enable:   false,

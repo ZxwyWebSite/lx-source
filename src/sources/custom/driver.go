@@ -60,42 +60,54 @@ var (
 
 func init() {
 	env.Inits.Add(func() {
-		WySource = &WrapSource{
-			UrlFunc: wy.Url,
-			LrcFunc: notSupport,
-			PicFunc: notSupport,
-			VefFunc: func(songMid string) bool {
-				_, err := strconv.ParseUint(songMid, 10, 0)
-				return err == nil
-			},
+		if env.Config.Source.Enable_Wy {
+			WySource = &WrapSource{
+				UrlFunc: wy.Url,
+				LrcFunc: notSupport,
+				PicFunc: notSupport,
+				VefFunc: func(songMid string) bool {
+					_, err := strconv.ParseUint(songMid, 10, 0)
+					return err == nil
+				},
+			}
 		}
-		MgSource = &WrapSource{
-			UrlFunc: mg.Url,
-			LrcFunc: notSupport,
-			PicFunc: notSupport,
-			VefFunc: func(songMid string) bool { return len(songMid) == 11 },
+		if env.Config.Source.Enable_Mg {
+			MgSource = &WrapSource{
+				UrlFunc: mg.Url,
+				LrcFunc: notSupport,
+				PicFunc: notSupport,
+				VefFunc: func(songMid string) bool { return len(songMid) == 11 },
+			}
 		}
-		KwSource = &WrapSource{
-			UrlFunc: kw.Url,
-			LrcFunc: notSupport,
-			PicFunc: notSupport,
-			VefFunc: func(songMid string) bool {
-				_, err := strconv.ParseUint(songMid, 10, 0)
-				return err == nil
-			},
+		if env.Config.Source.Enable_Kw {
+			KwSource = &WrapSource{
+				UrlFunc: kw.Url,
+				LrcFunc: notSupport,
+				PicFunc: notSupport,
+				VefFunc: func(songMid string) bool {
+					_, err := strconv.ParseUint(songMid, 10, 0)
+					return err == nil
+				},
+			}
 		}
-		KgSource = &WrapSource{
-			UrlFunc: kg.Url,
-			LrcFunc: notSupport,
-			PicFunc: notSupport,
-			VefFunc: func(songMid string) bool { return len(songMid) == 32 },
+		if env.Config.Source.Enable_Kg {
+			KgSource = &WrapSource{
+				UrlFunc: kg.Url,
+				LrcFunc: notSupport,
+				PicFunc: notSupport,
+				VefFunc: func(songMid string) bool { return len(songMid) == 32 },
+			}
 		}
-		TxSource = &WrapSource{
-			UrlFunc: tx.Url,
-			LrcFunc: notSupport,
-			PicFunc: notSupport,
-			VefFunc: func(songMid string) bool { return len(songMid) == 14 },
+		if env.Config.Source.Enable_Tx {
+			TxSource = &WrapSource{
+				UrlFunc: tx.Url,
+				LrcFunc: notSupport,
+				PicFunc: notSupport,
+				VefFunc: func(songMid string) bool { return len(songMid) == 14 },
+			}
 		}
-		LxSource = nil
+		if env.Config.Source.Enable_Lx {
+			LxSource = nil
+		}
 	})
 }

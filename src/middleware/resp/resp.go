@@ -56,12 +56,12 @@ func (o *Resp) Execute(c *gin.Context) {
 	default:
 		status = http.StatusOK
 	}
-	// if o.Code != 0 {
-	// 	if o.Code == 2 /*&& o.Data == ``*/ {
-	// 		o.Data = ErrMp3
-	// 	}
-	// 	c.Abort()
-	// }
+	if o.Code != 0 {
+		// if o.Code == 2 /*&& o.Data == ``*/ {
+		// 	o.Data = ErrMp3
+		// }
+		c.Abort()
+	}
 	c.JSON(status, o)
 }
 

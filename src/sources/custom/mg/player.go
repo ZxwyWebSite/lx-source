@@ -4,6 +4,7 @@ import (
 	"lx-source/src/env"
 	"lx-source/src/sources"
 	"lx-source/src/sources/custom/utils"
+	"lx-source/src/sources/example"
 	"net/http"
 	"sync"
 
@@ -18,14 +19,12 @@ var (
 
 func init() {
 	env.Inits.Add(func() {
-		if !env.Config.Source.Enable_Mg {
-			return
-		}
 		loger := env.Loger.NewGroup(`MgInit`)
 		switch env.Config.Custom.Mg_Mode {
 		case `0`, `builtin`:
 			loger.Debug(`use builtin`)
-			// Url = builtin
+			mg_pool = &sync.Pool{New: func() any { return new(mgApi_Song) }}
+			Url = builtin
 		case `1`, `custom`:
 			loger.Debug(`use custom`)
 			if ztool.Chk_IsNilStr(
@@ -45,11 +44,35 @@ func init() {
 	})
 }
 
-// func builtin(songMid, quality string) (ourl, msg string) {
-// 	loger := env.Loger.NewGroup(`Mg`)
-// 	defer loger.Free()
-// 	return
-// }
+func builtin(songMid, quality string) (ourl, msg string) {
+	loger := env.Loger.NewGroup(`Mg`)
+	rquality, ok := qualitys[quality]
+	if !ok {
+		msg = sources.E_QNotSupport
+		return
+	}
+	defer loger.Free()
+	resp := mg_pool.Get().(*mgApi_Song)
+	defer mg_pool.Put(resp)
+	url := ztool.Str_FastConcat(`https://`, example.Api_mg, `?copyrightId=`, songMid, `&type=`, rquality)
+	err := ztool.Net_Request(
+		http.MethodGet, url, nil,
+		[]ztool.Net_ReqHandlerFunc{ztool.Net_ReqAddHeaders(example.Header_mg)},
+		[]ztool.Net_ResHandlerFunc{ztool.Net_ResToStruct(&resp)},
+	)
+	if err != nil {
+		loger.Error(`HttpReq: %s`, err)
+		msg = sources.ErrHttpReq
+		return
+	}
+	loger.Debug(`Resp: %+v`, resp)
+	if resp.Data.PlayURL != `` {
+		ourl = `https:` + utils.DelQuery(resp.Data.PlayURL)
+	} else {
+		msg = ztool.Str_FastConcat(resp.Code, `: `, resp.Msg)
+	}
+	return
+}
 
 func mcustom(songMid, quality string) (ourl, msg string) {
 	loger := env.Loger.NewGroup(`Mg`)

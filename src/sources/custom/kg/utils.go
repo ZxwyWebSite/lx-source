@@ -1,9 +1,9 @@
 package kg
 
 import (
+	"io"
 	"lx-source/src/env"
 	"lx-source/src/sources"
-	"net/http"
 	"slices"
 	"strings"
 
@@ -28,12 +28,12 @@ var (
 )
 
 const (
-	signkey   = `OIlwieks28dk2k092lksi2UIkp`
-	pidversec = `57ae12eb6890223e355ccfcb74edf70d`
-	clientver = `12029`
-	url       = `https://gateway.kugou.com/v5/url`
-	appid     = `1005`
-	mid       = `211008`
+	// signkey   = `OIlwieks28dk2k092lksi2UIkp`
+	// pidversec = `57ae12eb6890223e355ccfcb74edf70d`
+	// clientver = `12029`
+	url = `https://gateway.kugou.com/v5/url`
+	// appid     = `1005`
+	mid = `211008`
 )
 
 func sortDict(dictionary map[string]string) ([]string, int) {
@@ -58,7 +58,7 @@ func sortDict(dictionary map[string]string) ([]string, int) {
 // 	return zcypt.MD5EncStr(ztool.Str_FastConcat(signkey, b.String(), signkey))
 // }
 
-func signRequest(url string, params, headers map[string]string, out any) error {
+func signRequest(method string, url string, body io.Reader, params, headers map[string]string, out any) error {
 	// buildSignatureParams
 	keys, lens := sortDict(params)
 	var b strings.Builder
@@ -77,12 +77,15 @@ func signRequest(url string, params, headers map[string]string, out any) error {
 	}
 	c.WriteString(`signature`)
 	c.WriteByte('=')
-	c.WriteString(zcypt.MD5EncStr(ztool.Str_FastConcat(signkey, b.String(), signkey)))
+	c.WriteString(zcypt.MD5EncStr(ztool.Str_FastConcat(
+		env.Config.Custom.Kg_Client_SignKey,
+		b.String(), env.Config.Custom.Kg_Client_SignKey,
+	)))
 
 	url = ztool.Str_FastConcat(url, `?`, c.String())
 	// ztool.Cmd_FastPrintln(url)
 	return ztool.Net_Request(
-		http.MethodGet, url, nil,
+		method, url, body,
 		[]ztool.Net_ReqHandlerFunc{ztool.Net_ReqAddHeader(headers)},
 		[]ztool.Net_ResHandlerFunc{ //func(res *http.Response) error {
 			// body, err := io.ReadAll(res.Body)
@@ -96,7 +99,8 @@ func signRequest(url string, params, headers map[string]string, out any) error {
 
 func getKey(hash_ string) string {
 	return zcypt.MD5EncStr(ztool.Str_FastConcat(
-		strings.ToLower(hash_), pidversec, appid, mid, env.Config.Custom.Kg_userId,
+		strings.ToLower(hash_), env.Config.Custom.Kg_Client_PidVerSec,
+		env.Config.Custom.Kg_Client_AppId, mid, env.Config.Custom.Kg_userId,
 	))
 }
 

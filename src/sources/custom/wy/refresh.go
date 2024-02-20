@@ -22,6 +22,12 @@ import (
  2024-02-15:
   MUSIC_U 改变 则 6天 后 继续执行
   MUSIC_U 不变 则 1天 后 继续执行
+ 原理：
+  听说隔壁某解析群的账号经常使用，Token快一年了也没过期，
+  所以模拟正常使用，每天调用一次刷新接口，
+  证明这个Token还在使用，类似于给它"续期"，
+  就像SPlayer客户端一样，Cookie变了就合并，
+  (这是我随便猜的，未经测试仅供参考)
 */
 
 func refresh(loger *logs.Logger, now int64) error {
@@ -44,15 +50,16 @@ func refresh(loger *logs.Logger, now int64) error {
 			maps.Copy(cookies, cmap)
 			env.Config.Custom.Wy_Api_Cookie = cookie.Marshal(cookies)
 			loger.Debug(`Cookie: %#v`, cookies)
-			if _, ok := cmap[`MUSIC_U`]; ok {
-				// MUSIC_U 改变 则 6天 后 继续执行
-				env.Config.Custom.Wy_Refresh_Interval = now + 518400 //2147483647 - 86000
-				loger.Debug(`MUSIC_U 改变, 6天 后 继续执行`)
-			} else {
-				// MUSIC_U 不变 则 1天 后 继续执行
-				env.Config.Custom.Wy_Refresh_Interval = now + 86000
-				loger.Debug(`MUSIC_U 不变, 1天 后 继续执行`) //`未发现有效结果，将在下次检测时再次尝试`
-			}
+			// if _, ok := cmap[`MUSIC_U`]; ok {
+			// 	// MUSIC_U 改变 则 6天 后 继续执行
+			// 	env.Config.Custom.Wy_Refresh_Interval = now + 518400 //2147483647 - 86000
+			// 	loger.Debug(`MUSIC_U 改变, 6天 后 继续执行`)
+			// } else {
+			// 	// MUSIC_U 不变 则 1天 后 继续执行
+			// 	env.Config.Custom.Wy_Refresh_Interval = now + 86000
+			// 	loger.Debug(`MUSIC_U 不变, 1天 后 继续执行`) //`未发现有效结果，将在下次检测时再次尝试`
+			// }
+			env.Config.Custom.Wy_Refresh_Interval = now + 86000
 			err = env.Cfg.Save(``)
 			if err == nil {
 				loger.Info(`配置更新成功`)

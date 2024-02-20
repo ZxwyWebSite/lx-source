@@ -11,6 +11,7 @@ import (
 	"lx-source/src/sources/custom/tx"
 	"lx-source/src/sources/custom/wy"
 	wm "lx-source/src/sources/custom/wy/modules"
+	"lx-source/src/sources/example"
 	"net/http"
 	"strconv"
 	"sync"
@@ -72,8 +73,8 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 		if env.Config.Source.MusicIdVerify {
 			vef := wv_pool.Get().(*wm.VerifyInfo)
 			defer wv_pool.Put(vef)
-			vurl := ztool.Str_FastConcat(`https://`, vef_wy, `&id=`, c.MusicID)
-			_, err := ztool.Net_HttpReq(http.MethodGet, vurl, nil, header_wy, &vef)
+			vurl := ztool.Str_FastConcat(`https://`, example.Vef_wy, `&id=`, c.MusicID)
+			_, err := ztool.Net_HttpReq(http.MethodGet, vurl, nil, example.Header_wy, &vef)
 			if err != nil {
 				jx.Error(`Wy, VefReq: %s`, err)
 				msg = sources.ErrHttpReq
@@ -95,13 +96,13 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 		// }
 		// url := urls[rand.Intn(len(urls))]
 		url := ztool.Str_FastConcat(
-			`https://`, api_wy, `&id=`, c.MusicID, `&level=`, rquery,
+			`https://`, example.Api_wy, `&id=`, c.MusicID, `&level=`, rquery,
 			`&timestamp=`, strconv.FormatInt(time.Now().UnixMilli(), 10),
 		)
 		// jx.Debug(`Wy, Url: %v`, url)
 		// wy源增加后端重试 默认3次
 		for i := 0; true; i++ {
-			_, err := ztool.Net_HttpReq(http.MethodGet, url, nil, header_wy, &resp)
+			_, err := ztool.Net_HttpReq(http.MethodGet, url, nil, example.Header_wy, &resp)
 			if err != nil {
 				jx.Error(`HttpReq, Err: %s, ReTry: %v`, err, i)
 				if i > 3 {
@@ -149,9 +150,9 @@ func (s *Source) GetLink(c *caches.Query) (outlink string, msg string) {
 		resp := mg_pool.Get().(*MgApi_Song)
 		defer mg_pool.Put(resp)
 
-		url := ztool.Str_FastConcat(`https://`, api_mg, `?copyrightId=`, c.MusicID, `&type=`, rquery)
+		url := ztool.Str_FastConcat(`https://`, example.Api_mg, `?copyrightId=`, c.MusicID, `&type=`, rquery)
 		// jx.Debug(`Mg, Url: %v`, url)
-		_, err := ztool.Net_HttpReq(http.MethodGet, url, nil, header_mg, &resp)
+		_, err := ztool.Net_HttpReq(http.MethodGet, url, nil, example.Header_mg, &resp)
 		if err != nil {
 			jx.Error(`Mg, HttpReq: %s`, err)
 			msg = sources.ErrHttpReq

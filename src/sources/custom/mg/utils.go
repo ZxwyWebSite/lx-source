@@ -22,4 +22,10 @@ var (
 	// 	q_flac: sources.Q_flac,
 	// 	q_fl24: sources.Q_fl24,
 	// }
+	qualitys = map[string]string{
+		sources.Q_128k: `1`,
+		sources.Q_320k: `2`,
+		sources.Q_flac: `3`,
+		sources.Q_fl24: `4`,
+	}
 )

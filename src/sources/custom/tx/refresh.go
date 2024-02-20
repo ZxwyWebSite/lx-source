@@ -129,7 +129,7 @@ func refresh(loger *logs.Logger, now int64) error {
 	loger.Info(`刷新登录成功`)
 	env.Config.Custom.Tx_Uuin = resp.Req1.Data.StrMusicId
 	env.Config.Custom.Tx_Ukey = resp.Req1.Data.MusicKey
-	env.Config.Custom.Tx_Refresh_Interval = now + 518400 //(每6天刷新一次) //1209600 - 86000 // 14天提前一天
+	env.Config.Custom.Tx_Refresh_Interval = now + 432000 //(每5天刷新一次) //1209600 - 86000 // 14天提前一天
 	loger.Debug(`Resp: %+v`, resp)
 	loger.Debug(`Uuin: %v, Ukey: %v`, resp.Req1.Data.StrMusicId, resp.Req1.Data.MusicKey)
 	loger.Debug(`ExpiresAt: %v, Real: %v`, resp.Req1.Data.ExpiredAt, env.Config.Custom.Tx_Refresh_Interval)

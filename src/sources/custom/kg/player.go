@@ -3,6 +3,7 @@ package kg
 import (
 	"lx-source/src/env"
 	"lx-source/src/sources"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -47,9 +48,9 @@ func Url(songMid, quality string) (ourl, msg string) {
 		`hash`:           tHash,
 		`module`:         ``,
 		`mid`:            mid,
-		`appid`:          appid,
+		`appid`:          env.Config.Custom.Kg_Client_AppId,
 		`ssa_flag`:       `is_fromtrack`,
-		`clientver`:      clientver,
+		`clientver`:      env.Config.Custom.Kg_Client_Version,
 		`open_time`:      now.Format(`20060102`),
 		`vipType`:        `6`,
 		`ptype`:          `0`,
@@ -64,8 +65,11 @@ func Url(songMid, quality string) (ourl, msg string) {
 		`dfid`:           `-`,
 		`pidversion`:     `3001`,
 
-		`quality`:    rquality,
-		`IsFreePart`: `1`,
+		`quality`: rquality,
+		// `IsFreePart`: `1`,
+	}
+	if !env.Config.Custom.Kg_Enable {
+		params[`IsFreePart`] = `1` // 仅游客登录时允许获取试听
 	}
 	headers := map[string]string{
 		`User-Agent`: `Android712-AndroidPhone-8983-18-0-NetMusic-wifi`,
@@ -76,7 +80,7 @@ func Url(songMid, quality string) (ourl, msg string) {
 		`x-router`: `tracker.kugou.com`,
 	}
 	var resp playInfo
-	err := signRequest(url, params, headers, &resp)
+	err := signRequest(http.MethodGet, url, nil, params, headers, &resp)
 	if err != nil {
 		loger.Error(`Request: %s`, err)
 		msg = sources.ErrHttpReq

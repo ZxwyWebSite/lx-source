@@ -3,7 +3,6 @@ package server
 import (
 	"lx-source/src/caches"
 	"lx-source/src/env"
-	"lx-source/src/middleware/auth"
 	"lx-source/src/middleware/dynlink"
 	"lx-source/src/middleware/resp"
 	"lx-source/src/middleware/util"
@@ -64,7 +63,8 @@ func InitRouter() *gin.Engine {
 	// r.StaticFile(`/favicon.ico`, `public/icon.ico`)
 	// r.StaticFile(`/lx-custom-source.js`, `public/lx-custom-source.js`)
 	// 解析接口
-	r.GET(`/link/:s/:id/:q`, auth.InitHandler(linkHandler)...)
+	loadMusic(r)
+	// r.GET(`/link/:s/:id/:q`, auth.InitHandler(linkHandler)...)
 	dynlink.LoadHandler(r)
 	// 动态链?
 	// r.GET(`/file/:t/:x/:f`, dynlink.FileHandler())
@@ -75,7 +75,6 @@ func InitRouter() *gin.Engine {
 	// 	r.Static(`/file`, env.Config.Cache.Local_Path)
 	// }
 	// 功能接口
-	// loadMusic(r.Group(`/api`))
 	// api := r.Group(`/api`)
 	// {
 	// 	api.GET(`/:s/:m/:q`) // {source}/{method}/{query}
@@ -105,6 +104,7 @@ const (
 	cacheHIT  = `Cache HIT`   // 缓存已命中
 	cacheMISS = `Cache MISS`  // 缓存未命中
 	cacheSet  = `Cache Seted` // 缓存已设置
+	cacheFAIL = `Cache FAIL`  // 缓存未成功
 
 	memHIT = `Memory HIT`    // 内存已命中
 	memRej = `Memory Reject` // 内存已拒绝

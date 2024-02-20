@@ -42,3 +42,16 @@ type playInfo struct {
 	} `json:"data"`
 	Info string `json:"info"`
 }
+
+type mgApi_Song struct {
+	Code string `json:"code"`
+	Msg  string `json:"msg"`
+	Data struct {
+		PlayURL         string `json:"playUrl"`
+		FormatID        string `json:"formatId"`
+		SalePrice       string `json:"salePrice"`
+		BizType         string `json:"bizType"`
+		BizCode         string `json:"bizCode"`
+		AuditionsLength int    `json:"auditionsLength"`
+	} `json:"data"`
+}

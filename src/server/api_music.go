@@ -3,11 +3,13 @@ package server
 import (
 	"lx-source/src/caches"
 	"lx-source/src/env"
+	"lx-source/src/middleware/auth"
 	"lx-source/src/middleware/resp"
 	"lx-source/src/middleware/util"
 	"lx-source/src/sources"
 	"lx-source/src/sources/custom"
 	"strings"
+	"sync/atomic"
 
 	"github.com/ZxwyWebSite/ztool"
 	"github.com/gin-gonic/gin"
@@ -23,10 +25,9 @@ import (
 // 	}
 // )
 
-func loadMusic(api *gin.RouterGroup) {
+func loadMusic(api gin.IRouter) {
 	// /{method}/{source}/{musicId}/{?quality}
-	api.GET(`/:m/:s/:id/*q`, musicHandler)
-
+	api.GET(`/:m/:s/:id/*q`, auth.InitHandler(musicHandler)...)
 }
 
 func musicHandler(c *gin.Context) {
@@ -40,32 +41,36 @@ func musicHandler(c *gin.Context) {
 		loger.Debug(`s:'%v', m:'%v', id:'%v', q:'%v'`, ps, pm, pid, pq)
 		// 查询内存缓存
 		cquery := strings.Join([]string{pm, ps, pid, pq}, `/`)
-		loger.Debug(cquery)
-		if clink, ok := env.Cache.Get(cquery); ok {
-			if cstr, ok := clink.(string); ok {
-				loger.Debug(`MemHIT [%q]=>[%q]`, cquery, cstr)
-				if cstr == `` {
-					out.Code = 2
-					out.Msg = `Memory Reject`
-				} else {
-					out.Msg = `Memory HIT`
-					out.Data = cstr
-				}
-				return out
+		loger.Debug(`MemoGet: %v`, cquery)
+		if cdata, ok := env.Cache.Get(cquery); ok {
+			loger.Debug(`MemoHIT: %q`, cdata)
+			if cdata == `` {
+				out.Code = 2
+				out.Msg = memRej
+			} else {
+				out.Msg = memHIT
+				out.Data = cdata
 			}
+			return out
 		}
 		// 定位音乐源
 		var source custom.Source
+		var active bool // 是否激活(自定义账号)
 		switch ps {
 		case sources.S_wy:
+			active = env.Config.Custom.Wy_Enable
 			source = custom.WySource
 		case sources.S_mg:
+			active = env.Config.Custom.Mg_Enable
 			source = custom.MgSource
 		case sources.S_kw:
+			active = env.Config.Custom.Kw_Enable
 			source = custom.KwSource
 		case sources.S_kg:
+			active = env.Config.Custom.Kg_Enable
 			source = custom.KgSource
 		case sources.S_tx:
+			active = env.Config.Custom.Tx_Enable
 			source = custom.TxSource
 		case sources.S_lx:
 			source = custom.LxSource
@@ -88,18 +93,45 @@ func musicHandler(c *gin.Context) {
 		switch pm {
 		case `url`, `link`:
 			// 查询文件缓存
-			if caches.UseCache.Stat() {
-				uquery := caches.NewQuery(ps, pid, pq)
-				defer uquery.Free()
+			var cstat bool
+			if caches.UseCache != nil {
+				cstat = caches.UseCache.Stat()
+			}
+			uquery := caches.NewQuery(ps, pid, pq)
+			defer uquery.Free()
+			if cstat {
+				loger.Debug(`FileGet: %v`, uquery.Query())
 				if olink := caches.UseCache.Get(uquery); olink != `` {
-					env.Cache.Set(cquery, olink, 3600)
-					out.Msg = `Cache HIT`
+					env.Cache.Set(cquery, olink, 7200)
+					out.Msg = cacheHIT
 					out.Data = olink
 					return out
 				}
 			}
-			out.Msg = `No Link`
-			// out.Data, out.Msg = source.Url(pid, pq)
+			// 解析歌曲外链
+			atomic.AddInt64(&reqnum, 1)
+			out.Data, out.Msg = source.Url(pid, pq)
+			if out.Data != `` {
+				// 缓存并获取直链
+				atomic.AddInt64(&secnum, 1)
+				if out.Msg == `` {
+					if cstat && active {
+						loger.Debug(`FileSet: %v`, out.Data)
+						if link := caches.UseCache.Set(uquery, out.Data.(string)); link != `` {
+							env.Cache.Set(cquery, link, 7200)
+							out.Msg = cacheSet
+							out.Data = link
+							return out
+						}
+						out.Msg = cacheFAIL
+					} else {
+						out.Msg = cacheMISS
+					}
+				}
+				// 无法获取直链 直接返回原链接
+				env.Cache.Set(cquery, out.Data, 1200)
+				return out
+			}
 		case `lrc`, `lyric`:
 			out.Data, out.Msg = source.Lrc(pid)
 		case `pic`, `cover`:
@@ -107,10 +139,11 @@ func musicHandler(c *gin.Context) {
 		default:
 			out.Code = 6
 			out.Msg = ztool.Str_FastConcat(`无效源方法:'`, pm, `'`)
-			// return
+			return out
 		}
-		// 缓存并获取直链
-		if out.Data != `` {
+		if out.Msg != `` {
+			out.Code = 2
+			env.Cache.Set(cquery, out.Data, 600)
 		}
 		return out
 	})
