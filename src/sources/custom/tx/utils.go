@@ -29,11 +29,11 @@ var (
 			E: sources.Q_flac,
 			H: `RS01`,
 		},
-		`dolby`: {
+		sources.Q_dolby: {
 			E: sources.Q_flac,
 			H: `Q000`,
 		},
-		`master`: {
+		sources.Q_master: {
 			E: sources.Q_flac,
 			H: `AI00`, // (~~母带音质大部分都是AI提上去的~~)
 		},

@@ -92,8 +92,14 @@ func loadPublic(r *gin.Engine) {
 			)
 		}
 		r.GET(`/lx-custom-source.js`, func(c *gin.Context) {
+			var mime string
+			if _, ok := c.GetQuery(`raw`); ok {
+				mime = `application/octet-stream`
+			} else {
+				mime = `text/javascript; charset=utf-8`
+			}
 			c.Render(http.StatusOK, render.Data{
-				ContentType: `text/javascript; charset=utf-8`,
+				ContentType: mime,
 				Data:        data,
 			})
 		})

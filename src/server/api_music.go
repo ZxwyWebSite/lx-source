@@ -39,20 +39,6 @@ func musicHandler(c *gin.Context) {
 		loger := env.Loger.NewGroup(`MusicHandler`)
 		defer loger.Free()
 		loger.Debug(`s:'%v', m:'%v', id:'%v', q:'%v'`, ps, pm, pid, pq)
-		// 查询内存缓存
-		cquery := strings.Join([]string{pm, ps, pid, pq}, `/`)
-		loger.Debug(`MemoGet: %v`, cquery)
-		if cdata, ok := env.Cache.Get(cquery); ok {
-			loger.Debug(`MemoHIT: %q`, cdata)
-			if cdata == `` {
-				out.Code = 2
-				out.Msg = memRej
-			} else {
-				out.Msg = memHIT
-				out.Data = cdata
-			}
-			return out
-		}
 		// 定位音乐源
 		var source custom.Source
 		var active bool // 是否激活(自定义账号)
@@ -84,12 +70,26 @@ func musicHandler(c *gin.Context) {
 			out.Msg = sources.ErrDisable
 			return out
 		}
-		// 定位源方法
-		if !source.Vef(pid) {
+		if !source.Vef(&pid) {
 			out.Code = 6
 			out.Msg = sources.E_VefMusicId
 			return out
 		}
+		// 查询内存缓存
+		cquery := strings.Join([]string{pm, ps, pid, pq}, `/`)
+		loger.Debug(`MemoGet: %v`, cquery)
+		if cdata, ok := env.Cache.Get(cquery); ok {
+			loger.Debug(`MemoHIT: %q`, cdata)
+			if cdata == `` {
+				out.Code = 2
+				out.Msg = memRej
+			} else {
+				out.Msg = memHIT
+				out.Data = cdata
+			}
+			return out
+		}
+		// 定位源方法
 		switch pm {
 		case `url`, `link`:
 			// 查询文件缓存
@@ -102,7 +102,7 @@ func musicHandler(c *gin.Context) {
 			if cstat {
 				loger.Debug(`FileGet: %v`, uquery.Query())
 				if olink := caches.UseCache.Get(uquery); olink != `` {
-					env.Cache.Set(cquery, olink, 7200)
+					env.Cache.Set(cquery, olink, sources.C_lx)
 					out.Msg = cacheHIT
 					out.Data = olink
 					return out
@@ -118,7 +118,7 @@ func musicHandler(c *gin.Context) {
 					if cstat && active {
 						loger.Debug(`FileSet: %v`, out.Data)
 						if link := caches.UseCache.Set(uquery, out.Data.(string)); link != `` {
-							env.Cache.Set(cquery, link, 7200)
+							env.Cache.Set(cquery, link, sources.C_lx)
 							out.Msg = cacheSet
 							out.Data = link
 							return out
@@ -129,7 +129,7 @@ func musicHandler(c *gin.Context) {
 					}
 				}
 				// 无法获取直链 直接返回原链接
-				env.Cache.Set(cquery, out.Data, 1200)
+				env.Cache.Set(cquery, out.Data, source.Exp()-300)
 				return out
 			}
 		case `lrc`, `lyric`:

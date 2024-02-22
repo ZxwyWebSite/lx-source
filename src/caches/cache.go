@@ -55,7 +55,7 @@ func (c *Query) Free() { c.query = ``; query_pool.Put(c) }
 
 // 根据音质判断文件后缀
 func rext(q string) string {
-	if ztool.Chk_IsMatch(q, `128k`, `320k`) /*q == `128k` || q == `320k`*/ {
+	if /*ztool.Chk_IsMatch(q, `128k`, `320k`)*/ q == `128k` || q == `320k` {
 		return `mp3`
 	}
 	return `flac`

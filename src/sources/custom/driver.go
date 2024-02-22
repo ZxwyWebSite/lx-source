@@ -3,12 +3,14 @@ package custom
 
 import (
 	"lx-source/src/env"
+	"lx-source/src/sources"
 	"lx-source/src/sources/custom/kg"
 	"lx-source/src/sources/custom/kw"
 	"lx-source/src/sources/custom/mg"
 	"lx-source/src/sources/custom/tx"
 	"lx-source/src/sources/custom/wy"
 	"strconv"
+	"strings"
 )
 
 type (
@@ -16,13 +18,14 @@ type (
 	UrlFunc func(string, string) (string, string)
 	LrcFunc func(string) (string, string)
 	PicFunc func(string) (string, string)
-	VefFunc func(string) bool
+	VefFunc func(*string) bool
 	// 源接口
 	Source interface {
 		Url(string, string) (string, string) // 外链
 		Lrc(string) (string, string)         // 歌词
 		Pic(string) (string, string)         // 封面
-		Vef(string) bool                     // 验证
+		Vef(*string) bool                    // 验证
+		Exp() int                            // 缓存
 	}
 )
 
@@ -34,6 +37,7 @@ type WrapSource struct {
 	LrcFunc
 	PicFunc
 	VefFunc
+	ExpData int
 }
 
 func (ws *WrapSource) Url(songMid, quality string) (string, string) {
@@ -45,8 +49,11 @@ func (ws *WrapSource) Lrc(songMid string) (string, string) {
 func (ws *WrapSource) Pic(songMid string) (string, string) {
 	return ws.PicFunc(songMid)
 }
-func (ws *WrapSource) Vef(songMid string) bool {
+func (ws *WrapSource) Vef(songMid *string) bool {
 	return ws.VefFunc(songMid)
+}
+func (ws *WrapSource) Exp() int {
+	return ws.ExpData
 }
 
 var (
@@ -65,10 +72,11 @@ func init() {
 				UrlFunc: wy.Url,
 				LrcFunc: notSupport,
 				PicFunc: notSupport,
-				VefFunc: func(songMid string) bool {
-					_, err := strconv.ParseUint(songMid, 10, 0)
+				VefFunc: func(songMid *string) bool {
+					_, err := strconv.ParseUint(*songMid, 10, 0)
 					return err == nil
 				},
+				ExpData: sources.C_wy,
 			}
 		}
 		if env.Config.Source.Enable_Mg {
@@ -76,7 +84,10 @@ func init() {
 				UrlFunc: mg.Url,
 				LrcFunc: notSupport,
 				PicFunc: notSupport,
-				VefFunc: func(songMid string) bool { return len(songMid) == 11 },
+				VefFunc: func(songMid *string) bool {
+					return len(*songMid) == 11
+				},
+				ExpData: sources.C_mg,
 			}
 		}
 		if env.Config.Source.Enable_Kw {
@@ -84,10 +95,11 @@ func init() {
 				UrlFunc: kw.Url,
 				LrcFunc: notSupport,
 				PicFunc: notSupport,
-				VefFunc: func(songMid string) bool {
-					_, err := strconv.ParseUint(songMid, 10, 0)
+				VefFunc: func(songMid *string) bool {
+					_, err := strconv.ParseUint(*songMid, 10, 0)
 					return err == nil
 				},
+				ExpData: sources.C_kw,
 			}
 		}
 		if env.Config.Source.Enable_Kg {
@@ -95,7 +107,13 @@ func init() {
 				UrlFunc: kg.Url,
 				LrcFunc: notSupport,
 				PicFunc: notSupport,
-				VefFunc: func(songMid string) bool { return len(songMid) == 32 },
+				VefFunc: func(songMid *string) (ok bool) {
+					if ok = len(*songMid) == 32; ok {
+						*songMid = strings.ToUpper(*songMid)
+					}
+					return
+				},
+				ExpData: sources.C_kg,
 			}
 		}
 		if env.Config.Source.Enable_Tx {
@@ -103,7 +121,10 @@ func init() {
 				UrlFunc: tx.Url,
 				LrcFunc: notSupport,
 				PicFunc: notSupport,
-				VefFunc: func(songMid string) bool { return len(songMid) == 14 },
+				VefFunc: func(songMid *string) bool {
+					return len(*songMid) == 14
+				},
+				ExpData: sources.C_tx,
 			}
 		}
 		if env.Config.Source.Enable_Lx {

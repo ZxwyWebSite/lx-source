@@ -13,6 +13,10 @@ const (
 	Q_320k = `320k`
 	Q_flac = `flac`
 	Q_fl24 = `flac24bit`
+	// 扩展音质
+	Q_dolby  = `dolby`
+	Q_sky    = `sky`
+	Q_master = `master`
 	// 文件扩展
 	// X_aac  = `aac`
 	X_mp3 = `mp3`
@@ -33,6 +37,13 @@ const (
 	ErrHttpReq = `无法连接解析接口`
 	ErrNoLink  = `无法获取试听链接`
 	ErrDisable = `该音乐源已被禁用`
+	// 缓存时间
+	C_tx = 80400        // 不知道tx为什么要取一个这么不对劲的数字当过期时长
+	C_kg = 24 * 60 * 60 // 24 hours
+	C_kw = 60 * 60      // 60 minutes
+	C_wy = 20 * 60      // 20 minutes
+	C_mg = C_kg         // 永久直链但最多缓存1天
+	C_lx = 12 * 60 * 60 // 本地默认缓存12小时
 )
 
 const (

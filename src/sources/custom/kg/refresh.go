@@ -2,12 +2,10 @@ package kg
 
 import (
 	"errors"
-	"fmt"
 	"lx-source/src/env"
 	"math/rand"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/ZxwyWebSite/ztool"
@@ -83,13 +81,21 @@ func randomMixSongMid() (mid string, err error) {
 
 // 签到主函数，传入userinfo，响应None就是成功，报错即为不成功
 func do_account_signin(loger *logs.Logger, now int64) (err error) {
+	// 时间检测
+	if now < env.Config.Custom.Kg_Lite_Interval {
+		loger.Debug(`Key未过期，跳过...`)
+		return nil
+	}
 	// 检查用户配置文件，获取mixsongmid
-	mixid := `582534238`
-	if mixid == `auto` {
+	mixid := env.Config.Custom.Kg_Lite_MixId //`582534238`
+	if mixid == `auto` || mixid == `` {
 		mixid, err = randomMixSongMid()
 		if err != nil {
 			return
 		}
+		loger.Info(`成功获取MixSongMid: ` + mixid)
+	} else {
+		loger.Info(`使用固定MixSongMid: ` + mixid)
 	}
 
 	// 声明变量
@@ -107,12 +113,13 @@ func do_account_signin(loger *logs.Logger, now int64) (err error) {
 	body := ztool.Str_FastConcat(
 		`{"mixsongid":"`, mixid, `"}`,
 	)
+	tnow := time.Now()
 	params := map[string]string{
 		`userid`:     env.Config.Custom.Kg_userId,
 		`token`:      env.Config.Custom.Kg_token,
 		`appid`:      env.Config.Custom.Kg_Client_AppId,
 		`clientver`:  env.Config.Custom.Kg_Client_Version,
-		`clienttime`: strconv.FormatInt(time.Now().Unix(), 10),
+		`clienttime`: strconv.FormatInt(tnow.Unix(), 10),
 		`mid`:        mid,
 		`uuid`:       zcypt.HexToString(zcypt.RandomBytes(16)),
 		`dfid`:       `-`,
@@ -123,24 +130,30 @@ func do_account_signin(loger *logs.Logger, now int64) (err error) {
 	err = signRequest(
 		http.MethodPost,
 		`https://gateway.kugou.com/v2/report/listen_song`,
-		strings.NewReader(body),
-		params, headers, &out,
+		body, params, headers, &out,
 	)
 	if err != nil {
 		return err
 	}
+	loger.Debug(`Resp: %+v`, out)
 	if out.Status != 1 {
-		return errors.New(out.ErrorMsg)
+		if out.ErrorCode == 130012 {
+			loger.Info(`今日已签到过，明天再来吧`)
+		} else {
+			return errors.New(out.ErrorMsg)
+		}
+	} else {
+		loger.Info(`Lite签到成功`)
 	}
-	fmt.Printf("%#v\n", out)
-	env.Config.Custom.Kg_Lite_Interval = now + 86000
+	tomorrow := time.Date(tnow.Year(), tnow.Month(), tnow.Day()+1, 0, 0, 0, 0, tnow.Location())
+	env.Config.Custom.Kg_Lite_Interval = tomorrow.Unix()
 
-	return nil
+	return env.Cfg.Save(``)
 }
 
 func init() {
 	env.Inits.Add(func() {
-		if env.Config.Custom.Kg_Lite_Enable && false {
+		if env.Config.Custom.Kg_Lite_Enable {
 			if env.Config.Custom.Kg_Client_AppId == `3116` && env.Config.Custom.Kg_token != `` {
 				env.Tasker.Add(`kg_refresh`, do_account_signin, 86000, true)
 			}

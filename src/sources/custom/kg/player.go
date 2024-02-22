@@ -80,7 +80,7 @@ func Url(songMid, quality string) (ourl, msg string) {
 		`x-router`: `tracker.kugou.com`,
 	}
 	var resp playInfo
-	err := signRequest(http.MethodGet, url, nil, params, headers, &resp)
+	err := signRequest(http.MethodGet, url, ``, params, headers, &resp)
 	if err != nil {
 		loger.Error(`Request: %s`, err)
 		msg = sources.ErrHttpReq

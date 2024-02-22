@@ -86,6 +86,10 @@ func Url(songMid, quality string) (ourl, msg string) {
 		return
 	}
 	loger.Debug(`infoResp: %+v`, infoResp)
+	if len(infoResp.Req0.Data.Midurlinfo) == 0 {
+		msg = `No Data: 无返回数据`
+		return
+	}
 	infoData := infoResp.Req0.Data.Midurlinfo[0]
 	if infoData.Purl == `` {
 		msg = sources.E_NoLink //`无法获取音乐链接`

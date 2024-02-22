@@ -1,11 +1,21 @@
 package tx
 
 import (
+	"lx-source/src/env"
+	"strings"
+
 	"github.com/ZxwyWebSite/ztool"
 	"github.com/ZxwyWebSite/ztool/x/bytesconv"
 )
 
 func getMusicInfo(songMid string) (infoBody musicInfo, emsg string) {
+	cquery := strings.Join([]string{`tx`, songMid, `info`}, `/`)
+	if cdata, ok := env.Cache.Get(cquery); ok {
+		if cinfo, ok := cdata.(musicInfo); ok {
+			infoBody = cinfo
+			return
+		}
+	}
 	infoReqBody := ztool.Str_FastConcat(`{"comm":{"ct":"19","cv":"1859","uin":"0"},"req":{"method":"get_song_detail_yqq","module":"music.pf_song_detail_svr","param":{"song_mid":"`, songMid, `","song_type":0}}}`)
 	var infoResp struct {
 		Code int `json:"code"`
@@ -27,5 +37,6 @@ func getMusicInfo(songMid string) (infoBody musicInfo, emsg string) {
 		return //nil, `获取音乐信息失败`
 	}
 	infoBody = infoResp.Req.Data
+	env.Cache.Set(cquery, infoBody, 7200)
 	return //infoBody.Req.Data, ``
 }

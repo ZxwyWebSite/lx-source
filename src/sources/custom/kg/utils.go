@@ -1,7 +1,6 @@
 package kg
 
 import (
-	"io"
 	"lx-source/src/env"
 	"lx-source/src/sources"
 	"slices"
@@ -23,7 +22,8 @@ var (
 		sources.Q_320k: `320`,
 		sources.Q_flac: sources.Q_flac,
 		sources.Q_fl24: `high`,
-		`master`:       `viper_atmos`,
+
+		sources.Q_master: `viper_atmos`,
 	}
 )
 
@@ -58,15 +58,16 @@ func sortDict(dictionary map[string]string) ([]string, int) {
 // 	return zcypt.MD5EncStr(ztool.Str_FastConcat(signkey, b.String(), signkey))
 // }
 
-func signRequest(method string, url string, body io.Reader, params, headers map[string]string, out any) error {
-	// buildSignatureParams
+func signRequest(method string, url string, body string, params, headers map[string]string, out any) error {
 	keys, lens := sortDict(params)
+	// buildSignatureParams
 	var b strings.Builder
 	for i := 0; i < lens; i++ {
 		b.WriteString(keys[i])
 		b.WriteByte('=')
 		b.WriteString(params[keys[i]])
 	}
+	b.WriteString(body)
 	// buildRequestParams
 	var c strings.Builder
 	for j := 0; j < lens; j++ {
@@ -85,7 +86,7 @@ func signRequest(method string, url string, body io.Reader, params, headers map[
 	url = ztool.Str_FastConcat(url, `?`, c.String())
 	// ztool.Cmd_FastPrintln(url)
 	return ztool.Net_Request(
-		method, url, body,
+		method, url, strings.NewReader(body),
 		[]ztool.Net_ReqHandlerFunc{ztool.Net_ReqAddHeader(headers)},
 		[]ztool.Net_ResHandlerFunc{ //func(res *http.Response) error {
 			// body, err := io.ReadAll(res.Body)

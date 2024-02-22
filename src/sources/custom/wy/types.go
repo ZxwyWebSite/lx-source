@@ -14,9 +14,10 @@ var (
 		sources.Q_320k: `exhigh`,
 		sources.Q_flac: `lossless`,
 		sources.Q_fl24: `hires`,
-		`dolby`:        `jyeffect`,
-		`sky`:          `jysky`,
-		`master`:       `jymaster`,
+
+		sources.Q_dolby:  `jyeffect`,
+		sources.Q_sky:    sources.Q_sky,
+		sources.Q_master: `jymaster`,
 	}
 	// 优化：返回音质与查询音质相同，完全可以直接比较，不用多一步Reverse
 	// qualityMapReverse = map[string]string{

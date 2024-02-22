@@ -1,6 +1,7 @@
 package kg
 
 import (
+	"lx-source/src/env"
 	"net/http"
 	"strconv"
 	"strings"
@@ -10,6 +11,13 @@ import (
 )
 
 func getMusicInfo(hash_ string) (info musicInfo, emsg string) {
+	cquery := strings.Join([]string{`kg`, hash_, `info`}, `/`)
+	if cdata, ok := env.Cache.Get(cquery); ok {
+		if cinfo, ok := cdata.(musicInfo); ok {
+			info = cinfo
+			return
+		}
+	}
 	body := ztool.Str_FastConcat(
 		`{"area_code":"1","show_privilege":"1","show_album_info":"1","is_publish":"","appid":1005,"clientver":11451,"mid":"211008","dfid":"-","clienttime":"`,
 		strconv.FormatInt(time.Now().Unix(), 10),
@@ -49,5 +57,8 @@ func getMusicInfo(hash_ string) (info musicInfo, emsg string) {
 		}
 		return
 	}
-	return infoResp.Data[0][0], infoResp.Errmsg
+	info = infoResp.Data[0][0]
+	emsg = infoResp.Errmsg
+	env.Cache.Set(cquery, info, 7200)
+	return
 }

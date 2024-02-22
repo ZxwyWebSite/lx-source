@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	Version = `1.0.3-fix`
+	Version = `1.0.3-rc1`
 )
 
 var (
@@ -132,8 +132,9 @@ type (
 		Kg_token  string `comment:"field user.token"`
 		Kg_userId string `comment:"field user.userid"`
 		// kg lite_sign_in
-		Kg_Lite_Enable   bool  `comment:"是否启用概念版自动签到，仅在appid=3116时运行"`
-		Kg_Lite_Interval int64 `comment:"调用时间，自动刷新"`
+		Kg_Lite_Enable   bool   `comment:"是否启用概念版自动签到，仅在appid=3116时运行"`
+		Kg_Lite_MixId    string `comment:"mix_songmid的获取方式, 默认auto, 可以改成一个数字手动"`
+		Kg_Lite_Interval int64  `comment:"调用时间，自动刷新"`
 
 		// tx
 		Tx_Enable bool   `comment:"是否启用小秋源"`
@@ -244,6 +245,7 @@ var (
 			Kg_Client_PidVerSec: `57ae12eb6890223e355ccfcb74edf70d`,
 			Kg_Client_Pid:       `2`,
 			Kg_userId:           `0`,
+			Kg_Lite_MixId:       `auto`,
 
 			Tx_Enable:           false,
 			Tx_Refresh_Enable:   false,

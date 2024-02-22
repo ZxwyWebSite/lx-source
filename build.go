@@ -39,6 +39,8 @@ const (
 	args_zpak = true        // 打包文件
 )
 
+var workDir string
+
 // 编译
 func doCompile(v_os, v_arch, v_archv, v_cc string) error {
 	//  构建               |    目标系统  |       目标架构  |           优化等级            |    不包含调试信息  |  使用外部链接器  |  输出详细操作 | 静态编译 |  JSON解释器
@@ -52,7 +54,11 @@ func doCompile(v_os, v_arch, v_archv, v_cc string) error {
 		return ztool.Str_FastConcat(name, v_archv, wexe)
 	}()
 	pname := filepath.Clean(ztool.Str_FastConcat(args_path, fname))
-	cmd := ztool.Str_FastConcat(`go build -o `, pname, ` -ldflags "-s -w -linkmode external -extldflags ''" -tags "go_json"`) // go_json | json(std) | jsoniter | sonic
+	cmd := ztool.Str_FastConcat(
+		`go build -o `, pname,
+		` -gcflags=-trimpath="`, workDir, `" -asmflags=-trimpath="`, workDir, `" -buildvcs=false`,
+		` -ldflags "-s -w -linkmode external" -tags "go_json"`, // go_json | json(std) | jsoniter | sonic
+	)
 	// 输出要执行的命令
 	ztool.Cmd_FastPrintln(ztool.Str_FastConcat(`执行命令：`, cmd))
 	// 设置环境&执行编译
@@ -84,7 +90,11 @@ func doCompile(v_os, v_arch, v_archv, v_cc string) error {
 		if !ztool.Fbj_IsExists(`archieve`) {
 			os.MkdirAll(filepath.Join(args_path, `archieve`), 0755)
 		}
-		if err := ztool.Pak_ZipFile(pname, ztool.Str_FastConcat(filepath.Join(args_path, `archieve`, fname), `.zip`), ztool.Pak_ZipConfig{UnPath: true}); err != nil {
+		if err := ztool.Pak_ZipFile(
+			pname,
+			filepath.Join(args_path, `archieve`, ztool.Str_LastBefore(fname, `.`))+`.zip`,
+			ztool.Pak_ZipConfig{UnPath: true},
+		); err != nil {
 			ztool.Cmd_FastPrintln(ztool.Str_FastConcat(`打包["`, pname, `"]出错：`, err.Error()))
 		} else {
 			ztool.Cmd_FastPrintln(ztool.Str_FastConcat(`打包["`, pname, `"]完成`))
@@ -98,6 +108,7 @@ func init() {
 		ztool.Cmd_FastPrintln("简易脚本，未对Linux以外系统做适配，请复制执行以下命令编译：\ngo build -ldflags \"-s -w\" -tags \"go_json\"\n如无报错则会在本目录生成名为lx-source的可执行文件。")
 		os.Exit(1)
 	}
+	workDir, _ = os.Getwd()
 	ztool.Cmd_FastPrintln(ztool.Str_FastConcat(`
  ================================
  |  Golang 一键编译脚本
