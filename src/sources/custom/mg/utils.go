@@ -27,5 +27,20 @@ var (
 		sources.Q_320k: `2`,
 		sources.Q_flac: `3`,
 		sources.Q_fl24: `4`,
+
+		sources.Q_master: `5`,
+	}
+	// qualitysReverse = map[string]string {
+	// 	`000009`: sources.Q_128k,
+	// 	`020010`: sources.Q_320k,
+	// 	`011002`: sources.Q_flac,
+	// 	`011005`: sources.Q_fl24,
+	// }
+	mgheader = map[string]string{
+		`Origin`:  `https://m.music.migu.cn`,
+		`Referer`: `https://m.music.migu.cn/v4/`,
+		`By`:      ``,
+		`channel`: ``,
+		`Cookie`:  ``,
 	}
 )

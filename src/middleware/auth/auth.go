@@ -2,6 +2,7 @@
 package auth
 
 import (
+	"encoding/gob"
 	"lx-source/src/env"
 	"lx-source/src/middleware/resp"
 	"sync/atomic"
@@ -16,6 +17,10 @@ type (
 		Num uint32 // 请求次数
 	}
 )
+
+func init() {
+	gob.Register(RateLimit{})
+}
 
 func InitHandler(h gin.HandlerFunc) (out []gin.HandlerFunc) {
 	loger := env.Loger.NewGroup(`AuthHandler`)

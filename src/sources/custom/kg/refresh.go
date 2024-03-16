@@ -89,10 +89,22 @@ func do_account_signin(loger *logs.Logger, now int64) (err error) {
 	// 检查用户配置文件，获取mixsongmid
 	mixid := env.Config.Custom.Kg_Lite_MixId //`582534238`
 	if mixid == `auto` || mixid == `` {
-		mixid, err = randomMixSongMid()
-		if err != nil {
-			return
+		for i := 0; true; i++ {
+			mixid, err = randomMixSongMid()
+			if err != nil {
+				loger.Error(`ReTry: %v, Err: %s`, i, err)
+				if i >= 2 {
+					return
+				}
+				time.Sleep(time.Second)
+				continue
+			}
+			break
 		}
+		// mixid, err = randomMixSongMid()
+		// if err != nil {
+		// 	return
+		// }
 		loger.Info(`成功获取MixSongMid: ` + mixid)
 	} else {
 		loger.Info(`使用固定MixSongMid: ` + mixid)

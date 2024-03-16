@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	Version = `1.0.3-rc1`
+	Version = `1.0.3-rc2`
 )
 
 var (
@@ -37,6 +37,8 @@ type (
 		// FFConv  bool   `comment:"(实验性) 使用FFMpeg修复音频(本地缓存)"`
 		NgProxy bool  `comment:"兼容反向代理(beta)"`
 		Timeout int64 `comment:"网络请求超时(单位:秒,海外服务器可适当调大)"`
+
+		Store string `comment:"内存缓存持久化文件地址"`
 	}
 	// 接口
 	Conf_Apis struct {
@@ -69,7 +71,7 @@ type (
 	}
 	// 来源
 	Conf_Source struct {
-		Mode string `comment:"音乐来源 0: off(关闭 仅本地), 1: builtin(内置), 2: custom(登录账号 暂不支持)"`
+		// Mode string `comment:"音乐来源 0: off(关闭 仅本地), 1: builtin(内置), 2: custom(登录账号 暂不支持)"`
 		// 伪装IP
 		FakeIP_Mode  string `comment:"伪装IP模式 0: off(关闭), 1: req(传入值), 2: val(静态)"`
 		FakeIP_Value string `comment:"静态伪装IP"`
@@ -108,6 +110,9 @@ type (
 		Mg_Usr_Token string `comment:"field user.token"`
 		Mg_Usr_OSVer string `comment:"field user.osversion"`
 		Mg_Usr_ReqUA string `comment:"field user.useragent"`
+		// mg refresh
+		Mg_Refresh_Enable   bool  `comment:"是否启用Cookie保活"`
+		Mg_Refresh_Interval int64 `comment:"下次运行时间 (自动更新)"`
 
 		// kw
 		Kw_Enable bool   `comment:"是否启用小蜗源"`
@@ -193,6 +198,7 @@ var (
 			Print:   true,
 			SysLev:  false,
 			Timeout: 30,
+			Store:   `/data/memo.bin`,
 		},
 		Apis: Conf_Apis{
 			// BindAddr: `http://192.168.10.22:1011/`,
@@ -209,7 +215,7 @@ var (
 			// BanList_White:    []string{`127.0.0.1`},
 		},
 		Source: Conf_Source{
-			Mode:          `builtin`,
+			// Mode:          `builtin`,
 			FakeIP_Mode:   `0`,
 			FakeIP_Value:  `192.168.10.2`,
 			Proxy_Enable:  false,

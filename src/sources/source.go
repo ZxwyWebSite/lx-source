@@ -1,8 +1,8 @@
 package sources
 
-import (
-	"lx-source/src/caches"
-)
+// import (
+// 	"lx-source/src/caches"
+// )
 
 // var Loger = env.Loger.NewGroup(`Sources`) // JieXiApis
 
@@ -71,18 +71,18 @@ var (
  验证部分放到GetLink里
 
 */
-type Source interface {
-	Verify(*caches.Query) (string, bool)    // 验证是否可用 <查询参数> <rquery,ok>
-	GetLink(*caches.Query) (string, string) // 查询获取链接 <查询参数> <链接,信息>
-}
+// type Source interface {
+// 	Verify(*caches.Query) (string, bool)    // 验证是否可用 <查询参数> <rquery,ok>
+// 	GetLink(*caches.Query) (string, string) // 查询获取链接 <查询参数> <链接,信息>
+// }
 
 // 默认空接口
-type NullSource struct{}
+// type NullSource struct{}
 
-func (*NullSource) Verify(*caches.Query) (string, bool)    { return ``, false }
-func (*NullSource) GetLink(*caches.Query) (string, string) { return ``, `NullSource` }
+// func (*NullSource) Verify(*caches.Query) (string, bool)    { return ``, false }
+// func (*NullSource) GetLink(*caches.Query) (string, string) { return ``, `NullSource` }
 
-var UseSource Source = &NullSource{} // = &builtin.Source{}
+// var UseSource Source = &NullSource{} // = &builtin.Source{}
 
 // 统一错误
 // type (

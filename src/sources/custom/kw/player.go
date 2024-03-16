@@ -79,7 +79,7 @@ func bdapi(songMid, quality string) (ourl, msg string) {
 		`https://bd-api.kuwo.cn/api/service/music/downloadInfo/`, songMid,
 		`?isMv=0&format=`, info.E,
 		`&br=`, info.H, info.E, //`&level=`,
-		`&uin=`, env.Config.Custom.Kw_Bd_Uid,
+		`&uid=`, env.Config.Custom.Kw_Bd_Uid,
 		`&token=`, env.Config.Custom.Kw_Bd_Token,
 	)
 	// jx.Debug(`Kw, Url: %s`, url)

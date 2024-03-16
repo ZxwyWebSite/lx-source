@@ -1,3 +1,5 @@
+//go:build extapp
+
 package server
 
 import (

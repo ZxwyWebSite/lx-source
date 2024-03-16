@@ -4,6 +4,7 @@ import (
 	"lx-source/src/env"
 	wy "lx-source/src/sources/custom/wy/modules"
 	"maps"
+	"time"
 
 	// "time"
 
@@ -59,7 +60,9 @@ func refresh(loger *logs.Logger, now int64) error {
 			// 	env.Config.Custom.Wy_Refresh_Interval = now + 86000
 			// 	loger.Debug(`MUSIC_U 不变, 1天 后 继续执行`) //`未发现有效结果，将在下次检测时再次尝试`
 			// }
-			env.Config.Custom.Wy_Refresh_Interval = now + 86000
+			tnow := time.Now()
+			env.Config.Custom.Wy_Refresh_Interval = time.Date(tnow.Year(), tnow.Month(), tnow.Day()+1, 0, 0, 0, 0, tnow.Location()).Unix()
+			// env.Config.Custom.Wy_Refresh_Interval = now + 86000
 			err = env.Cfg.Save(``)
 			if err == nil {
 				loger.Info(`配置更新成功`)

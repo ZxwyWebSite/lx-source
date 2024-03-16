@@ -5,8 +5,9 @@ import (
 	"lx-source/src/caches"
 	"lx-source/src/caches/localcache"
 	"lx-source/src/env"
-	"lx-source/src/sources"
-	"lx-source/src/sources/builtin"
+
+	// "lx-source/src/sources"
+	// "lx-source/src/sources/builtin"
 	"net/http"
 	stdurl "net/url"
 	"path/filepath"
@@ -64,6 +65,29 @@ func loadFileLoger() {
 
 // 初始化基础功能
 func initMain() {
+	// 载入内存缓存
+	storepath := env.RunPath + env.Config.Main.Store
+	env.Cache.MustRestore(storepath)
+	env.Defer.Add(func() { env.Cache.MustPersist(storepath) })
+	env.Tasker.Add(`memo_flush`, func(*logs.Logger, int64) error {
+		return env.Cache.Persist(storepath)
+	}, 3600, false)
+
+	// 初始化数据库
+	// idb := env.Loger.NewGroup(`InitDB`)
+	// switch `sqlite` {
+	// case `memo`:
+	// 	break
+	// case `sqlite`:
+	// 	err := database.InitDB(`data/data.db`)
+	// 	if err != nil {
+	// 		idb.Error(`数据库载入失败: %s`, err)
+	// 	}
+	// default:
+	// 	idb.Error(`未定义的数据库模式，请检查配置 [DataBase].Mode`)
+	// }
+	// idb.Free()
+
 	// 初始化代理
 	ipr := env.Loger.NewGroup(`InitProxy`)
 	switch env.Config.Source.FakeIP_Mode {
@@ -167,16 +191,16 @@ func initMain() {
 	icl.Free()
 
 	// 初始化音乐源
-	ise := env.Loger.NewGroup(`InitSource`)
-	switch env.Config.Source.Mode {
-	case `0`, `off`:
-		break
-	case `1`, `builtin`:
-		sources.UseSource = &builtin.Source{}
-	case `2`, `custom`:
-		ise.Fatal(`暂未实现账号解析源`)
-	default:
-		ise.Error(`未定义的音乐源，请检查配置 [Source].Mode，本次启动禁用内置源`)
-	}
-	ise.Free()
+	// ise := env.Loger.NewGroup(`InitSource`)
+	// switch env.Config.Source.Mode {
+	// case `0`, `off`:
+	// 	break
+	// case `1`, `builtin`:
+	// 	sources.UseSource = &builtin.Source{}
+	// case `2`, `custom`:
+	// 	ise.Fatal(`暂未实现账号解析源`)
+	// default:
+	// 	ise.Error(`未定义的音乐源，请检查配置 [Source].Mode，本次启动禁用内置源`)
+	// }
+	// ise.Free()
 }

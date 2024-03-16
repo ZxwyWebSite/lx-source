@@ -1,7 +1,9 @@
 package kg
 
 import (
+	"encoding/gob"
 	"lx-source/src/env"
+	"lx-source/src/sources"
 	"net/http"
 	"strconv"
 	"strings"
@@ -9,6 +11,10 @@ import (
 
 	"github.com/ZxwyWebSite/ztool"
 )
+
+func init() {
+	gob.Register(musicInfo{})
+}
 
 func getMusicInfo(hash_ string) (info musicInfo, emsg string) {
 	cquery := strings.Join([]string{`kg`, hash_, `info`}, `/`)
@@ -59,6 +65,6 @@ func getMusicInfo(hash_ string) (info musicInfo, emsg string) {
 	}
 	info = infoResp.Data[0][0]
 	emsg = infoResp.Errmsg
-	env.Cache.Set(cquery, info, 7200)
+	env.Cache.Set(cquery, info, sources.C_lx)
 	return
 }

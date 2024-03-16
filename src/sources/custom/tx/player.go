@@ -31,6 +31,8 @@ import (
    返回结果
  更新：
   可通过 goto loop 实现，但可能会导致逻辑混乱 (想使用账号获取正常链接却返回试听链接)
+ 2024-03-16:
+  正常获取->128k获取->试听获取
 */
 
 func Url(songMid, quality string) (ourl, msg string) {
@@ -54,7 +56,12 @@ func Url(songMid, quality string) (ourl, msg string) {
 	}
 	var strFileName string
 	tryLink := infoBody.TrackInfo.Pay.PayPlay == 1 && /*uauthst == ``&&*/ !env.Config.Custom.Tx_Enable
+Loop:
 	if tryLink {
+		if infoBody.TrackInfo.Vs[0] == `` {
+			msg = sources.ErrNoLink
+			return
+		}
 		strFileName = ztool.Str_FastConcat(`RS02`, infoBody.TrackInfo.Vs[0], `.`, sources.X_mp3)
 	} else {
 		strFileName = ztool.Str_FastConcat(infoFile.H, infoBody.TrackInfo.File.MediaMid, `.`, infoFile.E)
@@ -92,6 +99,16 @@ func Url(songMid, quality string) (ourl, msg string) {
 	}
 	infoData := infoResp.Req0.Data.Midurlinfo[0]
 	if infoData.Purl == `` {
+		if env.Config.Source.ForceFallback && !tryLink {
+			if quality != sources.Q_128k && infoBody.TrackInfo.Pay.PayPlay == 0 {
+				msg = `Fallback to 128k`
+				infoFile = fileInfo[sources.Q_128k]
+			} else {
+				msg = `Fallbacked`
+				tryLink = true
+			}
+			goto Loop
+		}
 		msg = sources.E_NoLink //`无法获取音乐链接`
 		return
 	}
@@ -102,8 +119,10 @@ func Url(songMid, quality string) (ourl, msg string) {
 	// }
 	if realQuality != infoFile.H && !tryLink {
 		msg = sources.E_QNotMatch
-		return
+		if !env.Config.Source.ForceFallback {
+			return
+		}
 	}
-	ourl = ztool.Str_FastConcat(`https://ws.stream.qqmusic.qq.com/`, infoData.Purl)
+	ourl = `https://ws.stream.qqmusic.qq.com/` + infoData.Purl
 	return
 }

@@ -92,6 +92,10 @@ func musicHandler(c *gin.Context) {
 		// 定位源方法
 		switch pm {
 		case `url`, `link`:
+			// if !active && pq != sources.Q_128k {
+			// 	out.Msg = `未激活源仅可试听128k音质`
+			// 	return out
+			// }
 			// 查询文件缓存
 			var cstat bool
 			if caches.UseCache != nil {
@@ -127,6 +131,8 @@ func musicHandler(c *gin.Context) {
 					} else {
 						out.Msg = cacheMISS
 					}
+				} else {
+					loger.Warn(`发生错误: %s`, out.Msg)
 				}
 				// 无法获取直链 直接返回原链接
 				env.Cache.Set(cquery, out.Data, source.Exp()-300)

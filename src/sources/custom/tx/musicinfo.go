@@ -1,12 +1,18 @@
 package tx
 
 import (
+	"encoding/gob"
 	"lx-source/src/env"
+	"lx-source/src/sources"
 	"strings"
 
 	"github.com/ZxwyWebSite/ztool"
 	"github.com/ZxwyWebSite/ztool/x/bytesconv"
 )
+
+func init() {
+	gob.Register(musicInfo{})
+}
 
 func getMusicInfo(songMid string) (infoBody musicInfo, emsg string) {
 	cquery := strings.Join([]string{`tx`, songMid, `info`}, `/`)
@@ -37,6 +43,6 @@ func getMusicInfo(songMid string) (infoBody musicInfo, emsg string) {
 		return //nil, `获取音乐信息失败`
 	}
 	infoBody = infoResp.Req.Data
-	env.Cache.Set(cquery, infoBody, 7200)
+	env.Cache.Set(cquery, infoBody, sources.C_lx)
 	return //infoBody.Req.Data, ``
 }

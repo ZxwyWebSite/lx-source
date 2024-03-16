@@ -56,7 +56,7 @@ func doCompile(v_os, v_arch, v_archv, v_cc string) error {
 	pname := filepath.Clean(ztool.Str_FastConcat(args_path, fname))
 	cmd := ztool.Str_FastConcat(
 		`go build -o `, pname,
-		` -gcflags=-trimpath="`, workDir, `" -asmflags=-trimpath="`, workDir, `" -buildvcs=false`,
+		` -gcflags=-trimpath="`, workDir, `" -asmflags=-trimpath="`, workDir, `" -trimpath -buildvcs=false`,
 		` -ldflags "-s -w -linkmode external" -tags "go_json"`, // go_json | json(std) | jsoniter | sonic
 	)
 	// 输出要执行的命令

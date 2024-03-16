@@ -1,17 +1,12 @@
 package server
 
 import (
-	"lx-source/src/caches"
 	"lx-source/src/env"
 	"lx-source/src/middleware/dynlink"
-	"lx-source/src/middleware/resp"
-	"lx-source/src/middleware/util"
 	"lx-source/src/sources"
 	"net/http"
-	"sync/atomic"
 	"time"
 
-	"github.com/ZxwyWebSite/ztool"
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 )
@@ -111,76 +106,76 @@ const (
 )
 
 // 外链解析
-func linkHandler(c *gin.Context) {
-	resp.Wrap(c, func() *resp.Resp {
-		// 获取传入参数 检查合法性
-		arr := util.ParaArr(c, `s`, `id`, `q`)
-		s, id, q := arr[0], arr[1], arr[2]
-		// parms := util.ParaMap(c)
-		// getParam := func(p string) string { return strings.TrimSuffix(strings.TrimPrefix(c.Param(p), `/`), `/`) } //strings.Trim(c.Param(p), `/`)
-		// s := parms[`s`]   //c.Param(`s`)   //getParam(`s`)   // source 平台 wy, mg, kw
-		// id := parms[`id`] //c.Param(`id`) //getParam(`id`) // sid 音乐ID wy: songmid, mg: copyrightId
-		// q := parms[`q`]   //c.Param(`q`)   //getParam(`q`)   // quality 音质 128k / 320k / flac / flac24bit
-		env.Loger.NewGroup(`LinkQuery`).Debug(`s: %v, id: %v, q: %v`, s, id, q).Free()
-		if ztool.Chk_IsNilStr(s, q, id) {
-			return &resp.Resp{Code: 6, Msg: `参数不全`} // http.StatusBadRequest
-		}
-		cquery := caches.NewQuery(s, id, q)
-		cquery.Request = c.Request
-		// fmt.Printf("%+v\n", cquery)
-		defer cquery.Free()
-		// _, ok := sources.UseSource.Verify(cquery) // 获取请求音质 同时检测是否支持(如kw源没有flac24bit) qualitys[q][s]rquery
-		// if !ok {
-		// 	return &resp.Resp{Code: 6, Msg: `不支持的平台或音质`}
-		// }
+// func linkHandler(c *gin.Context) {
+// 	resp.Wrap(c, func() *resp.Resp {
+// 		// 获取传入参数 检查合法性
+// 		arr := util.ParaArr(c, `s`, `id`, `q`)
+// 		s, id, q := arr[0], arr[1], arr[2]
+// 		// parms := util.ParaMap(c)
+// 		// getParam := func(p string) string { return strings.TrimSuffix(strings.TrimPrefix(c.Param(p), `/`), `/`) } //strings.Trim(c.Param(p), `/`)
+// 		// s := parms[`s`]   //c.Param(`s`)   //getParam(`s`)   // source 平台 wy, mg, kw
+// 		// id := parms[`id`] //c.Param(`id`) //getParam(`id`) // sid 音乐ID wy: songmid, mg: copyrightId
+// 		// q := parms[`q`]   //c.Param(`q`)   //getParam(`q`)   // quality 音质 128k / 320k / flac / flac24bit
+// 		env.Loger.NewGroup(`LinkQuery`).Debug(`s: %v, id: %v, q: %v`, s, id, q).Free()
+// 		if ztool.Chk_IsNilStr(s, q, id) {
+// 			return &resp.Resp{Code: 6, Msg: `参数不全`} // http.StatusBadRequest
+// 		}
+// 		cquery := caches.NewQuery(s, id, q)
+// 		cquery.Request = c.Request
+// 		// fmt.Printf("%+v\n", cquery)
+// 		defer cquery.Free()
+// 		// _, ok := sources.UseSource.Verify(cquery) // 获取请求音质 同时检测是否支持(如kw源没有flac24bit) qualitys[q][s]rquery
+// 		// if !ok {
+// 		// 	return &resp.Resp{Code: 6, Msg: `不支持的平台或音质`}
+// 		// }
 
-		// 查询内存
-		if clink, ok := env.Cache.Get(cquery.Query()); ok {
-			if str, ok := clink.(string); ok {
-				env.Loger.NewGroup(`MemCache`).Debug(`MemHIT [%q]=>[%q]`, cquery.Query(), str).Free()
-				if str == `` {
-					return &resp.Resp{Code: 2, Msg: memRej} // 拒绝请求，当前一段时间内解析出错 `MemCache Reject`
-				}
-				return &resp.Resp{Msg: memHIT, Data: str} // `MemCache HIT`
-			}
-		}
-		// 查询缓存
-		var cstat bool
-		if caches.UseCache != nil {
-			cstat = caches.UseCache.Stat()
-		}
-		sc := env.Loger.NewGroup(`StatCache`)
-		defer sc.Free()
-		if cstat {
-			sc.Debug(`Method: Get, Query: %v`, cquery.Query())
-			if link := caches.UseCache.Get(cquery); link != `` {
-				env.Cache.Set(cquery.Query(), link, 3600)
-				return &resp.Resp{Msg: cacheHIT, Data: link}
-			}
-		} else {
-			sc.Debug(`Disabled`)
-		}
-		atomic.AddInt64(&reqnum, 1)
-		// 解析歌曲外链
-		outlink, emsg := sources.UseSource.GetLink(cquery)
-		if emsg != `` {
-			if emsg == sources.Err_Verify { // Verify Failed: 不支持的平台或音质
-				return &resp.Resp{Code: 6, Msg: ztool.Str_FastConcat(emsg, `: 不支持的平台或音质`)}
-			}
-			env.Cache.Set(cquery.Query(), outlink, 600) // 发生错误的10分钟内禁止再次查询
-			return &resp.Resp{Code: 2, Msg: emsg, Data: outlink}
-		}
-		atomic.AddInt64(&secnum, 1)
-		// 缓存并获取直链 !(s == `kg` || (s == `tx` && !tx_en)) => (s != `kg` && (s != `tx` || tx_en))
-		if outlink != `` && cstat && cquery.Source != sources.S_kg && (cquery.Source != sources.S_tx || env.Config.Custom.Tx_Enable) {
-			sc.Debug(`Method: Set, Link: %v`, outlink)
-			if link := caches.UseCache.Set(cquery, outlink); link != `` {
-				env.Cache.Set(cquery.Query(), link, 3600)
-				return &resp.Resp{Msg: cacheSet, Data: link}
-			}
-		}
-		// 无法获取直链 直接返回原链接
-		env.Cache.Set(cquery.Query(), outlink, 1200)
-		return &resp.Resp{Msg: cacheMISS, Data: outlink}
-	})
-}
+// 		// 查询内存
+// 		if clink, ok := env.Cache.Get(cquery.Query()); ok {
+// 			if str, ok := clink.(string); ok {
+// 				env.Loger.NewGroup(`MemCache`).Debug(`MemHIT [%q]=>[%q]`, cquery.Query(), str).Free()
+// 				if str == `` {
+// 					return &resp.Resp{Code: 2, Msg: memRej} // 拒绝请求，当前一段时间内解析出错 `MemCache Reject`
+// 				}
+// 				return &resp.Resp{Msg: memHIT, Data: str} // `MemCache HIT`
+// 			}
+// 		}
+// 		// 查询缓存
+// 		var cstat bool
+// 		if caches.UseCache != nil {
+// 			cstat = caches.UseCache.Stat()
+// 		}
+// 		sc := env.Loger.NewGroup(`StatCache`)
+// 		defer sc.Free()
+// 		if cstat {
+// 			sc.Debug(`Method: Get, Query: %v`, cquery.Query())
+// 			if link := caches.UseCache.Get(cquery); link != `` {
+// 				env.Cache.Set(cquery.Query(), link, 3600)
+// 				return &resp.Resp{Msg: cacheHIT, Data: link}
+// 			}
+// 		} else {
+// 			sc.Debug(`Disabled`)
+// 		}
+// 		atomic.AddInt64(&reqnum, 1)
+// 		// 解析歌曲外链
+// 		outlink, emsg := sources.UseSource.GetLink(cquery)
+// 		if emsg != `` {
+// 			if emsg == sources.Err_Verify { // Verify Failed: 不支持的平台或音质
+// 				return &resp.Resp{Code: 6, Msg: ztool.Str_FastConcat(emsg, `: 不支持的平台或音质`)}
+// 			}
+// 			env.Cache.Set(cquery.Query(), outlink, 600) // 发生错误的10分钟内禁止再次查询
+// 			return &resp.Resp{Code: 2, Msg: emsg, Data: outlink}
+// 		}
+// 		atomic.AddInt64(&secnum, 1)
+// 		// 缓存并获取直链 !(s == `kg` || (s == `tx` && !tx_en)) => (s != `kg` && (s != `tx` || tx_en))
+// 		if outlink != `` && cstat && cquery.Source != sources.S_kg && (cquery.Source != sources.S_tx || env.Config.Custom.Tx_Enable) {
+// 			sc.Debug(`Method: Set, Link: %v`, outlink)
+// 			if link := caches.UseCache.Set(cquery, outlink); link != `` {
+// 				env.Cache.Set(cquery.Query(), link, 3600)
+// 				return &resp.Resp{Msg: cacheSet, Data: link}
+// 			}
+// 		}
+// 		// 无法获取直链 直接返回原链接
+// 		env.Cache.Set(cquery.Query(), outlink, 1200)
+// 		return &resp.Resp{Msg: cacheMISS, Data: outlink}
+// 	})
+// }

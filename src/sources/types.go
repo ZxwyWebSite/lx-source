@@ -1,3 +1,5 @@
+//go:build extapp
+
 package sources
 
 // MusicFree 数据结构
