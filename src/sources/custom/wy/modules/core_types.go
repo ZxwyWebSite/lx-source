@@ -81,4 +81,16 @@ type (
 		Success bool   `json:"success"`
 		Error   bool   `json:"error"`
 	}
+	// 扫码登录请求
+	QrKey struct {
+		Code   int    `json:"code"`
+		UniKey string `json:"unikey"`
+	}
+	// 扫码登录结果
+	QrCheck struct {
+		Code      int    `json:"code"`
+		Message   string `json:"message"`
+		AvatarUrl string `json:"avatarUrl"`
+		NickName  string `json:"nickname"`
+	}
 )

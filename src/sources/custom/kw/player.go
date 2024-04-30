@@ -140,7 +140,9 @@ func kwdes(songMid, quality string) (ourl, msg string) {
 		realQuality := strconv.Itoa(resp.Data.Bitrate)
 		if realQuality != infoFile.H[:len(infoFile.H)-1] {
 			msg = sources.E_QNotMatch
-			return
+			if !env.Config.Source.ForceFallback {
+				return
+			}
 		}
 		ourl = utils.DelQuery(resp.Data.URL) //resp.Data.URL[:strings.Index(resp.Data.URL, `?`)]
 		return
@@ -166,7 +168,9 @@ func kwdes(songMid, quality string) (ourl, msg string) {
 				realQuality := infoData[`bitrate`]
 				if realQuality != infoFile.H[:len(infoFile.H)-1] {
 					msg = sources.E_QNotMatch
-					return
+					if !env.Config.Source.ForceFallback {
+						return
+					}
 				}
 				ourl = utils.DelQuery(infoData[`url`]) //infoData[`url`][:strings.Index(infoData[`url`], `?`)]
 				return

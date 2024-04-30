@@ -88,7 +88,13 @@ func InitHandler(h gin.HandlerFunc) (out []gin.HandlerFunc) {
 		loger.Debug(`ApiKeyAuth Enabled`)
 		out = append(out, func(c *gin.Context) {
 			resp.Wrap(c, func() *resp.Resp {
-				if auth := c.Request.Header.Get(`X-LxM-Auth`); auth != env.Config.Auth.ApiKey_Value {
+				var auth string
+				if key, ok := c.GetQuery(`key`); ok {
+					auth = key
+				} else {
+					auth = c.Request.Header.Get(`X-LxM-Auth`)
+				}
+				if auth != env.Config.Auth.ApiKey_Value {
 					loger.Debug(`验证失败: %q`, auth)
 					return &resp.Resp{Code: 3, Msg: `验证Key失败, 请联系网站管理员`}
 				}

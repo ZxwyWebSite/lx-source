@@ -123,6 +123,6 @@ Loop:
 			return
 		}
 	}
-	ourl = `https://ws.stream.qqmusic.qq.com/` + infoData.Purl
+	ourl = env.Config.Custom.Tx_CDNUrl + infoData.Purl
 	return
 }

@@ -454,3 +454,50 @@ type refreshInfo struct {
 	ErrorMsg  string `json:"error_msg"`
 	Status    int    `json:"status"`
 }
+
+type loginInfo struct {
+	Data struct {
+		// ArttoyAvatar string `json:"arttoy_avatar"`
+		// BcCode string `json:"bc_code"`
+		// Birthday string `json:"birthday"`
+		// BirthdayMmdd string `json:"birthday_mmdd"`
+		// Exp int `json:"exp"`
+		// IsVip int `json:"is_vip"`
+		// MBeginTime string `json:"m_begin_time"`
+		// MEndTime string `json:"m_end_time"`
+		// MIsOld int `json:"m_is_old"`
+		// MType int `json:"m_type"`
+		// Mobile int `json:"mobile"`
+		// Nickname string `json:"nickname"`
+		// Pic string `json:"pic"`
+		// Qq int `json:"qq"`
+		// RegTime string `json:"reg_time"`
+		// RoamBeginTime string `json:"roam_begin_time"`
+		// RoamEndTime string `json:"roam_end_time"`
+		// RoamList struct {
+		// } `json:"roam_list"`
+		// RoamType            int    `json:"roam_type"`
+		// Score               int    `json:"score"`
+		// Servertime          string `json:"servertime"`
+		// Sex                 int    `json:"sex"`
+		// SuVipBeginTime      string `json:"su_vip_begin_time"`
+		// SuVipClearday       string `json:"su_vip_clearday"`
+		// SuVipEndTime        string `json:"su_vip_end_time"`
+		// SuVipYEndtime       string `json:"su_vip_y_endtime"`
+		// T1                  string `json:"t1"`
+		Token string `json:"token"`
+		// TotpServerTimestamp int    `json:"totp_server_timestamp"`
+		// UserType            int    `json:"user_type"`
+		// UserYType           int    `json:"user_y_type"`
+		Userid int `json:"userid"`
+		// Username            string `json:"username"`
+		// VipBeginTime        string `json:"vip_begin_time"`
+		// VipEndTime          string `json:"vip_end_time"`
+		// VipToken            string `json:"vip_token"`
+		// VipType             int    `json:"vip_type"`
+		// Wechat              int    `json:"wechat"`
+		// YType               int    `json:"y_type"`
+	} `json:"data"`
+	ErrorCode int `json:"error_code"`
+	Status    int `json:"status"`
+}

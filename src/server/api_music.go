@@ -76,6 +76,7 @@ func musicHandler(c *gin.Context) {
 			return out
 		}
 		// 查询内存缓存
+		atomic.AddInt64(&accnum, 1)
 		cquery := strings.Join([]string{pm, ps, pid, pq}, `/`)
 		loger.Debug(`MemoGet: %v`, cquery)
 		if cdata, ok := env.Cache.Get(cquery); ok {

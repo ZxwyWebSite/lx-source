@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>LX Source API</title>
+</head>
+
+<body>
+  <h1>LX Source API</h1>
+  当你看到这个页面时,服务已经成功跑起来了~
+  <h2>示例:</h2>
+  <script>
+    const api = './';
+    function l(s, id, q) {
+      let url = `${api}link/${s}/${id[Math.floor(Math.random() * id.length)]}/${q}`;
+      const key = localStorage.getItem('apipass'); if (key) url += `?key=${key}`;
+      fetch(url)
+        .then((response) => response.json())
+        .then((res) => {
+          if (res.code != 0 || res.data == '') throw res.msg;
+          window.open(res.data);
+        })
+        .catch((err) => {
+          alert(err);
+        });
+    };
+  </script>
+  <ul>
+    <li>0. <a href="./lx-custom-source.js?raw">获取源脚本</a></li>
+    <li>1. <a onclick="l('wy',['473120817','434022356','2112290949','27646205'],'320k')">WY小芸源</a></li>
+    <li>2. <a onclick="l('mg',['6005970X6D1','63278105706','60054702010'],'320k')">MG小蜜源</a></li>
+    <li>3. <a onclick="l('kw',['236891','26428340','133360','112051'],'320k')">KW小蜗源</a></li>
+    <li>4. <a onclick="l('kg',['A90B30D3F51C56841D3FE51D5C5B09A8'],'128k')">KG小枸源</a></li>
+    <li>5. <a onclick="l('tx',['002Le9vl2JlYDK','0013Xlvm0ZKNnA'],'128k')">TX小秋源</a></li>
+  </ul>
+  <h2>状态:</h2>
+  <ul>
+    <li>
+      已持续运行
+      <strong id="lxs_run_d">20</strong> 天
+      <strong id="lxs_run_h">21</strong> 时
+      <strong id="lxs_run_m">10</strong> 分
+      <strong id="lxs_run_s">08</strong> 秒
+    </li>
+    <li>
+      调用:
+      <strong id="lxs_sum_acc">0</strong>
+      /解析:
+      <strong id="lxs_sum_req">0</strong>
+      /成功:
+      <strong id="lxs_sum_sec">0</strong>
+    </li>
+    <li>
+      版本号:
+      <strong id="lxs_ver">dev</strong>
+    </li>
+    <li><strong id="lxs_err"></strong></li>
+  </ul>
+  <script>
+    fetch(api)
+      .then((response) => response.json())
+      .then((res) => {
+        document.getElementById("lxs_sum_acc").innerText = res.summary.Accessn;
+        document.getElementById("lxs_sum_req").innerText = res.summary.Request;
+        document.getElementById("lxs_sum_sec").innerText = res.summary.Success;
+        const startTime = new Date(res.summary.StartAt * 1000);
+        const updateTimer = () => {
+          const elapsed = new Date() - startTime;
+          document.getElementById("lxs_run_d").innerText = String(Math.floor(elapsed / 864e5)).padStart(2, "0");
+          document.getElementById("lxs_run_h").innerText = String(Math.floor((elapsed % 864e5) / 36e5)).padStart(2, "0");
+          document.getElementById("lxs_run_m").innerText = String(Math.floor((elapsed % 36e5) / 6e4)).padStart(2, "0");
+          document.getElementById("lxs_run_s").innerText = String(Math.floor((elapsed % 6e4) / 1000)).padStart(2, "0");
+        };
+        updateTimer(), setInterval(updateTimer, 1e3);
+        document.getElementById("lxs_ver").innerText = res.version;
+        if (res.auth.apikey && !localStorage.getItem("apipass")) {
+          const key = prompt("请填写API密钥"); if (key) localStorage.setItem("apipass", key);
+        }
+      })
+      .catch((err) => {
+        document.getElementById("lxs_err").innerText = err;
+      });
+  </script>
+  <style>
+    html,
+    body {
+      height: 100vh;
+      width: 100vw;
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+      text-align: center;
+      margin-top: 30px;
+      overflow: hidden;
+    }
+
+    * {
+      color: rgb(100, 100, 100);
+    }
+
+    a {
+      color: #42b983;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    ul,
+    li {
+      margin: 0;
+    }
+
+    ul {
+      margin-left: -40px;
+      line-height: 30px;
+    }
+
+    li {
+      list-style: none;
+    }
+  </style>
+</body>
+
+</html>

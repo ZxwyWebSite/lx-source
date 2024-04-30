@@ -46,8 +46,8 @@ func init() {
 		// }
 		fp.Info(`设置默认文件权限为 %o (%v)`, *perm, ztool.Fbj_DefPerm).Free()
 	}
-	parseEtag(etag)
 	env.Cfg.MustInit(confPath)
+	parseEtag(etag)
 	// fmt.Printf("%+v\n", env.Config)
 	env.Loger.NewGroup(`ServHello`).Info(`欢迎使用 LX-SOURCE 洛雪音乐自定义源`).Free()
 	if !env.Config.Main.Debug {

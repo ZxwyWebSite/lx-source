@@ -7,11 +7,13 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 )
 
 var (
+	accnum int64
 	reqnum int64
 	secnum int64
 )
@@ -23,6 +25,10 @@ func InitRouter() *gin.Engine {
 	// Gzip压缩
 	if env.Config.Main.Gzip {
 		r.Use(gzip.Gzip(gzip.DefaultCompression, gzip.WithExcludedPaths([]string{"/file/"})))
+	}
+	// Cors跨域
+	if env.Config.Main.Cors {
+		r.Use(cors.Default())
 	}
 	startime := time.Now().Unix()
 	// 源信息
@@ -48,8 +54,13 @@ func InitRouter() *gin.Engine {
 			// 数据统计
 			`summary`: gin.H{
 				`StartAt`: startime, // 启动时间
+				`Accessn`: accnum,   // 访问次数
 				`Request`: reqnum,   // 解析次数
 				`Success`: secnum,   // 成功次数
+			},
+			// 验证方式
+			`auth`: gin.H{
+				`apikey`: env.Config.Auth.ApiKey_Enable,
 			},
 		})
 	})

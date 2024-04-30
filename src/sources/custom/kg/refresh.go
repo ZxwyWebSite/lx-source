@@ -1,6 +1,8 @@
 package kg
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
 	"errors"
 	"lx-source/src/env"
 	"math/rand"
@@ -10,6 +12,8 @@ import (
 
 	"github.com/ZxwyWebSite/ztool"
 	"github.com/ZxwyWebSite/ztool/logs"
+	"github.com/ZxwyWebSite/ztool/x/bytesconv"
+	"github.com/ZxwyWebSite/ztool/x/json"
 	"github.com/ZxwyWebSite/ztool/zcypt"
 )
 
@@ -148,11 +152,14 @@ func do_account_signin(loger *logs.Logger, now int64) (err error) {
 		return err
 	}
 	loger.Debug(`Resp: %+v`, out)
-	if out.Status != 1 {
-		if out.ErrorCode == 130012 {
+	if out.Status != 1 || out.ErrorCode != 0 {
+		switch out.ErrorCode {
+		case 130012:
 			loger.Info(`今日已签到过，明天再来吧`)
-		} else {
-			return errors.New(out.ErrorMsg)
+		case 51002:
+			panic(`登录过期啦！请重新获取账号Token`)
+		default:
+			return errors.New(strconv.Itoa(out.ErrorCode) + `: ` + out.ErrorMsg)
 		}
 	} else {
 		loger.Info(`Lite签到成功`)
@@ -163,12 +170,96 @@ func do_account_signin(loger *logs.Logger, now int64) (err error) {
 	return env.Cfg.Save(``)
 }
 
+// 刷新Token
+func login_by_token(loger *logs.Logger, now int64) (err error) {
+	// 前置到期检测
+	if now < env.Config.Custom.Kg_Refresh_Interval {
+		loger.Debug(`Key未过期，跳过...`)
+		return
+	}
+	// 获取加密参数
+	var aeskey []byte
+	switch env.Config.Custom.Kg_Client_AppId {
+	case `1005`:
+		aeskey = []byte(`90b8382a1bb4ccdcf063102053fd75b8`)
+	case `3116`:
+		aeskey = []byte(`c24f74ca2820225badc01946dba4fdf7`)
+	default:
+		panic(`当前应用AppId暂不支持此功能`)
+	}
+	// 生成请求数据
+	tnow := time.Now()
+	pbyte, _ := json.Marshal(map[string]any{
+		`clienttime`: tnow.Unix(),
+		`token`:      env.Config.Custom.Kg_token,
+	})
+	block, _ := aes.NewCipher(aeskey)
+	encrypter := cipher.NewCBCEncrypter(block, aeskey[block.BlockSize():])
+	padata := zcypt.PKCS7Padding(pbyte, block.BlockSize())
+	encrypted := make([]byte, len(padata))
+	encrypter.CryptBlocks(encrypted, padata)
+	encstr := zcypt.HexToString(encrypted)
+	bodys, _ := json.Marshal(map[string]any{
+		`t1`:            0,
+		`t2`:            0,
+		`p3`:            encstr,
+		`userid`:        env.Config.Custom.Kg_userId,
+		`clienttime_ms`: tnow.UnixMilli(),
+	})
+	params := map[string]string{
+		`dfid`:       `-`,
+		`mid`:        `20211008`,
+		`clientver`:  env.Config.Custom.Kg_Client_Version,
+		`clienttime`: strconv.FormatInt(tnow.Unix(), 10),
+		`appid`:      env.Config.Custom.Kg_Client_AppId,
+	}
+	headers := map[string]string{
+		`User-Agent`: `Android711-1070-10860-14-0-LOGIN-wifi`,
+		`KG-THash`:   `7af653c`,
+		`KG-Rec`:     `1`,
+		`KG-RC`:      `1`,
+	}
+	// 请求对应接口
+	var res loginInfo
+	err = signRequest(
+		http.MethodPost,
+		`http://login.user.kugou.com/v4/login_by_token`,
+		bytesconv.BytesToString(bodys),
+		params, headers, &res,
+	)
+	if err != nil {
+		return errors.New(`接口请求失败: ` + err.Error())
+	}
+	loger.Info(`获取数据成功`)
+	loger.Debug(`Resp: %+v`, res)
+	if res.ErrorCode != 0 {
+		return errors.New(`刷新登录失败: ` + strconv.Itoa(res.ErrorCode))
+	}
+	env.Config.Custom.Kg_token = res.Data.Token
+	env.Config.Custom.Kg_userId = strconv.Itoa(res.Data.Userid)
+	next := time.Date(tnow.Year(), tnow.Month(), tnow.Day()+25, 0, 0, 0, 0, tnow.Location())
+	env.Config.Custom.Kg_Refresh_Interval = next.Unix()
+	loger.Info(`刷新登录成功`)
+	return env.Cfg.Save(``)
+}
+
 func init() {
 	env.Inits.Add(func() {
-		if env.Config.Custom.Kg_Lite_Enable {
-			if env.Config.Custom.Kg_Client_AppId == `3116` && env.Config.Custom.Kg_token != `` {
-				env.Tasker.Add(`kg_refresh`, do_account_signin, 86000, true)
+		if env.Config.Custom.Kg_token != `` {
+			if env.Config.Custom.Kg_Lite_Enable && env.Config.Custom.Kg_Client_AppId == `3116` {
+				env.Tasker.Add(`kg_litsign`, do_account_signin, 86000, true)
+			}
+			if env.Config.Custom.Kg_Refresh_Enable {
+				env.Tasker.Add(`kg_refresh`, login_by_token, 86000, true)
 			}
 		}
+		/*if env.Config.Custom.Kg_Lite_Enable {
+			if env.Config.Custom.Kg_Client_AppId == `3116` && env.Config.Custom.Kg_token != `` {
+				env.Tasker.Add(`kg_litsign`, do_account_signin, 86000, true)
+			}
+		}
+		if env.Config.Custom.Kg_Refresh_Enable && env.Config.Custom.Kg_token != `` {
+			env.Tasker.Add(`kg_refresh`, login_by_token, 86000, true)
+		}*/
 	})
 }

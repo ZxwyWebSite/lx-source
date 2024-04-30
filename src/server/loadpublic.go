@@ -107,5 +107,6 @@ func loadPublic(r *gin.Engine) {
 		r.StaticFileFS(`/lx-custom-source.js`, `lx-custom-source.js`, httpFS)
 	}
 	r.StaticFileFS(`/favicon.ico`, `lx-icon.ico`, httpFS)
+	r.StaticFileFS(`/status`, `status.html`, httpFS)
 	r.StaticFS(`/public`, httpFS)
 }

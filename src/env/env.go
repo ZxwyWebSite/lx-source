@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	Version = `1.0.3-rc2`
+	Version = `1.0.3.0430`
 )
 
 var (
@@ -31,6 +31,7 @@ type (
 		Debug   bool     `comment:"调试模式"`
 		Listen  []string `comment:"监听地址 (多端口以','分隔)"`
 		Gzip    bool     `comment:"开启GZip (对已压缩的内容使用会产生反效果)"`
+		Cors    bool     `comment:"添加跨域响应头 (兼容前端请求)"`
 		LogPath string   `comment:"文件日志路径，不填禁用"`
 		Print   bool     `comment:"控制台输出 (影响io性能，后台使用建议关闭)"`
 		SysLev  bool     `comment:"(实验性) 设置进程高优先级"`
@@ -140,11 +141,15 @@ type (
 		Kg_Lite_Enable   bool   `comment:"是否启用概念版自动签到，仅在appid=3116时运行"`
 		Kg_Lite_MixId    string `comment:"mix_songmid的获取方式, 默认auto, 可以改成一个数字手动"`
 		Kg_Lite_Interval int64  `comment:"调用时间，自动刷新"`
+		// kg refresh_login
+		Kg_Refresh_Enable   bool  `comment:"是否启动刷新登录"`
+		Kg_Refresh_Interval int64 `comment:""`
 
 		// tx
 		Tx_Enable bool   `comment:"是否启用小秋源"`
 		Tx_Ukey   string `comment:"Cookie中/客户端的请求体中的（comm.authst）"`
 		Tx_Uuin   string `comment:"key对应的QQ号"`
+		Tx_CDNUrl string `comment:"指定音频CDN地址"`
 		// tx refresh_login
 		Tx_Refresh_Enable   bool  `comment:"是否启动刷新登录"`
 		Tx_Refresh_Interval int64 `comment:"刷新间隔 (由程序维护，非必要无需修改)"`
@@ -254,6 +259,7 @@ var (
 			Kg_Lite_MixId:       `auto`,
 
 			Tx_Enable:           false,
+			Tx_CDNUrl:           `https://isure6.stream.qqmusic.qq.com/`,
 			Tx_Refresh_Enable:   false,
 			Tx_Refresh_Interval: 86000,
 		},
