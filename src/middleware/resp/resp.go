@@ -2,6 +2,7 @@
 package resp
 
 import (
+	"lx-source/src/env"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -26,7 +27,7 @@ type Resp struct {
 }
 
 // 获取失败默认音频
-var ErrMp3 = `https://r2eu.zxwy.link/gh/lx-source/static/error.mp3`
+// var ErrMp3 = `https://r2eu.zxwy.link/gh/lx-source/static/error.mp3`
 
 // 返回请求
 /*
@@ -43,7 +44,7 @@ func (o *Resp) Execute(c *gin.Context) {
 	case 2:
 		status = http.StatusServiceUnavailable
 		if o.Data == nil || o.Data == `` {
-			o.Data = ErrMp3
+			o.Data = env.Config.Main.ErrMp3 //ErrMp3
 		}
 	case 3:
 		status = http.StatusUnauthorized

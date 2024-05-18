@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	Version = `1.0.3.0430`
+	Version = `1.0.3.0518`
 )
 
 var (
@@ -36,10 +36,10 @@ type (
 		Print   bool     `comment:"控制台输出 (影响io性能，后台使用建议关闭)"`
 		SysLev  bool     `comment:"(实验性) 设置进程高优先级"`
 		// FFConv  bool   `comment:"(实验性) 使用FFMpeg修复音频(本地缓存)"`
-		NgProxy bool  `comment:"兼容反向代理(beta)"`
-		Timeout int64 `comment:"网络请求超时(单位:秒,海外服务器可适当调大)"`
-
-		Store string `comment:"内存缓存持久化文件地址"`
+		NgProxy bool   `comment:"兼容反向代理(beta)"`
+		Timeout int64  `comment:"网络请求超时(单位:秒,海外服务器可适当调大)"`
+		Store   string `comment:"内存缓存持久化文件地址"`
+		ErrMp3  string `comment:"获取失败默认音频"`
 	}
 	// 接口
 	Conf_Apis struct {
@@ -174,11 +174,11 @@ type (
 		Local_Bind string `comment:"本地缓存外部访问地址"`
 		Local_Auto bool   `comment:"自适应缓存访问地址(beta)"`
 		// 云盘
-		// Cloud_Site string `comment:"Cloudreve站点地址"`
-		// Cloud_User string `comment:"Cloudreve用户名"`
-		// Cloud_Pass string `comment:"Cloudreve密码"`
-		// Cloud_Sess string `comment:"Cloudreve会话"`
-		// Cloud_Path string `comment:"Cloudreve存储路径"`
+		Cloud_Site string `comment:"Cloudreve站点地址"`
+		Cloud_User string `comment:"Cloudreve用户名"`
+		Cloud_Pass string `comment:"Cloudreve密码"`
+		Cloud_Sess string `comment:"Cloudreve会话"`
+		Cloud_Path string `comment:"Cloudreve存储路径"`
 	}
 	// 结构
 	Conf struct {
@@ -204,6 +204,7 @@ var (
 			SysLev:  false,
 			Timeout: 30,
 			Store:   `/data/memo.bin`,
+			ErrMp3:  `https://r2eu.zxwy.link/gh/lx-source/static/error.mp3`,
 		},
 		Apis: Conf_Apis{
 			// BindAddr: `http://192.168.10.22:1011/`,
@@ -276,11 +277,11 @@ var (
 			LinkMode:   `1`,
 			Local_Path: `data/cache`,
 			Local_Bind: `http://127.0.0.1:1011/`,
-			// Cloud_Site: `https://cloudreveplus-demo.onrender.com/`,
-			// Cloud_User: `admin@cloudreve.org`,
-			// Cloud_Pass: `CloudrevePlusDemo`,
-			// Cloud_Sess: ``,
-			// Cloud_Path: `/Lx-Source/cache`,
+			Cloud_Site: `https://cloudreveplus-demo.onrender.com/`,
+			Cloud_User: `admin@cloudreve.org`,
+			Cloud_Pass: `CloudrevePlusDemo`,
+			Cloud_Sess: ``,
+			Cloud_Path: `/Lx-Source/cache`,
 		},
 	}
 	Config = DefCfg

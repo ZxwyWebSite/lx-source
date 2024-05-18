@@ -103,6 +103,7 @@ Loop:
 			if quality != sources.Q_128k && infoBody.TrackInfo.Pay.PayPlay == 0 {
 				msg = `Fallback to 128k`
 				infoFile = fileInfo[sources.Q_128k]
+				quality = sources.Q_128k
 			} else {
 				msg = `Fallbacked`
 				tryLink = true

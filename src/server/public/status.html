@@ -16,7 +16,7 @@
     const api = './';
     function l(s, id, q) {
       let url = `${api}link/${s}/${id[Math.floor(Math.random() * id.length)]}/${q}`;
-      const key = localStorage.getItem('apipass'); if (key) url += `?key=${key}`;
+      const key = localStorage.getItem('apipass'); if (key) url += `?key=${encodeURIComponent(key)}`;
       fetch(url)
         .then((response) => response.json())
         .then((res) => {

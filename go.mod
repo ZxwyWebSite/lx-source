@@ -3,9 +3,11 @@ module lx-source
 go 1.21
 
 require (
+	github.com/ZxwyWebSite/cr-go-sdk v0.0.2
 	github.com/ZxwyWebSite/ztool v0.0.1
 	github.com/gin-contrib/gzip v1.0.0
 	github.com/gin-gonic/gin v1.9.1
+	github.com/google/uuid v1.6.0
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 )
 
@@ -43,4 +45,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/ZxwyWebSite/ztool v0.0.1 => ./pkg/ztool // ../ztool
+replace (
+	github.com/ZxwyWebSite/cr-go-sdk v0.0.2 => ../cr-go-sdk
+	github.com/ZxwyWebSite/ztool v0.0.1 => ./pkg/ztool // ../ztool
+)

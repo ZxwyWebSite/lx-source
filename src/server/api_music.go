@@ -103,6 +103,7 @@ func musicHandler(c *gin.Context) {
 				cstat = caches.UseCache.Stat()
 			}
 			uquery := caches.NewQuery(ps, pid, pq)
+			uquery.Request = c.Request
 			defer uquery.Free()
 			if cstat {
 				loger.Debug(`FileGet: %v`, uquery.Query())

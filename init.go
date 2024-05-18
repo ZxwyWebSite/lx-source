@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/base64"
 	"lx-source/src/caches"
+	"lx-source/src/caches/cloudcache"
 	"lx-source/src/caches/localcache"
 	"lx-source/src/env"
 
@@ -12,6 +13,7 @@ import (
 	stdurl "net/url"
 	"path/filepath"
 
+	"github.com/ZxwyWebSite/cr-go-sdk"
 	"github.com/ZxwyWebSite/ztool"
 	"github.com/ZxwyWebSite/ztool/logs"
 	"github.com/ZxwyWebSite/ztool/zcypt"
@@ -169,22 +171,31 @@ func initMain() {
 		// }
 		// icl.Info(`使用本地缓存，文件路径 %q，绑定地址 %v`, LocalCachePath, env.Config.Apis.BindAddr)
 	case `2`, `cloudreve`:
-		icl.Fatal(`Cloudreve驱动暂未完善，未兼容新版调用方式，当前版本禁用`)
-		// icl.Warn(`Cloudreve驱动暂未完善，使用非本机存储时存在兼容性问题，请谨慎使用`)
-		// cs, err := cloudreve.NewSite(&cloudreve.Config{
-		// 	SiteUrl:  env.Config.Cache.Cloud_Site,
-		// 	Username: env.Config.Cache.Cloud_User,
-		// 	Password: env.Config.Cache.Cloud_Pass,
-		// 	Session:  env.Config.Cache.Cloud_Sess,
-		// })
-		// if err != nil {
-		// 	icl.Error(`驱动["cloudreve"]初始化失败: %v, 将禁用缓存功能`, err)
-		// }
-		// UseCache = &crcache.Cache{
-		// 	Cs:   cs,
-		// 	Path: env.Config.Cache.Cloud_Path,
-		// 	IsOk: err == nil,
-		// }
+		icl.Warn(`欢迎使用新版 Cloudreve 驱动, 由 cr-go-sdk 提供强力支持`)
+		site := &cr.SiteObj{
+			Addr:   env.Config.Cache.Cloud_Site,
+			ApiVer: cr.ApiV383,
+			Users: &cr.UserObj{
+				Mail:   env.Config.Cache.Cloud_User,
+				Pass:   env.Config.Cache.Cloud_Pass,
+				Cookie: cr.ParseCookie(env.Config.Cache.Cloud_Sess),
+			},
+		}
+		cache, err := caches.New(&cloudcache.Cache{
+			Site: site,
+			Path: env.Config.Cache.Cloud_Path,
+		})
+		if err != nil {
+			icl.Error(`驱动["cloudreve"]初始化失败: %v, 将禁用缓存功能`, err)
+		} else {
+			env.Tasker.Add(`cloud_sess`, func(l *logs.Logger, i int64) error {
+				if sess := site.Users.Cookie.String(); sess != env.Config.Cache.Cloud_Sess {
+					env.Config.Cache.Cloud_Sess = sess
+				}
+				return env.Cfg.Save(``)
+			}, 3600, true)
+		}
+		caches.UseCache = cache
 	default:
 		icl.Error(`未定义的缓存模式，请检查配置 [Cache].Mode，本次启动禁用缓存`)
 	}

@@ -1,8 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"lx-source/src/env"
+	"lx-source/src/sources/custom/tx"
 	wm "lx-source/src/sources/custom/wy/modules"
+	"runtime"
 	"strings"
 	"time"
 
@@ -22,6 +25,8 @@ func parseEtag(etag *string) {
 		// menuMian()
 	case `wyqr`:
 		wyQrLogin()
+	case `txqq`:
+		txQqLogin()
 	default:
 		loger.Fatal(`未知参数:%q`, *etag)
 	}
@@ -33,6 +38,17 @@ func wyQrLogin() {
 	loger := env.Loger.NewGroup(`WyQrLogin`)
 	defer loger.Free()
 	loger.Info(`执行模块: 网易云扫码登录`)
+
+	if env.Config.Custom.Wy_Api_Cookie != `` {
+		loger.Warn("已存在账号数据, 继续操作可能导致数据覆盖丢失！")
+		fmt.Print(`输入'y'继续: `)
+		var input string
+		fmt.Scanln(&input)
+		if input != `y` {
+			loger.Fatal(`用户取消操作`)
+		}
+	}
+
 	res, err := wm.LoginQrKey()
 	if err != nil {
 		loger.Fatal(`无法创建请求: %s`, err)
@@ -77,6 +93,32 @@ func wyQrLogin() {
 		default:
 			loger.Fatal(`未知状态: %v`, msg)
 		}
+	}
+}
+
+// QQ快速登录
+func txQqLogin() {
+	loger := env.Loger.NewGroup(`TxQqLogin`)
+	defer loger.Free()
+	loger.Info(`执行模块: QQ快速登录`)
+
+	if runtime.GOOS != `windows` {
+		loger.Fatal(`该模块仅支持在windows环境下使用`)
+		return
+	}
+
+	if env.Config.Custom.Tx_Ukey != `` {
+		loger.Warn("已存在账号数据, 继续操作可能导致数据覆盖丢失！")
+		fmt.Print(`输入'y'继续: `)
+		var input string
+		fmt.Scanln(&input)
+		if input != `y` {
+			loger.Fatal(`用户取消操作`)
+		}
+	}
+
+	if err := tx.Qlogin_graph(loger); err != nil {
+		loger.Fatal(err.Error())
 	}
 }
 

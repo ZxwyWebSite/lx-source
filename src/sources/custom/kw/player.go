@@ -110,12 +110,12 @@ func kwdes(songMid, quality string) (ourl, msg string) {
 	target_url := ztool.Str_FastConcat(
 		`https://mobi.kuwo.cn/mobi.s?f=kuwo&q=`,
 		base64_encrypt(ztool.Str_FastConcat(
-			`user=0&android_id=0&prod=kwplayer_ar_8.5.5.0&corp=kuwo&newver=3&vipver=8.5.5.0&source=kwplayer_ar_8.5.5.0_apk_keluze.apk&p2p=1&notrace=0`,
+			`corp=kuwo&source=kwplayer_ar_1.1.9_oppo_118980_320.apk&p2p=1&sig=0`,
 			`&type=`, convtype,
 			`&br=`, infoFile.H, infoFile.E,
 			`&format=`, infoFile.E,
 			`&rid=`, songMid,
-			`&priority=bitrate&loginUid=0&network=WIFI&loginSid=0&mode=down`,
+			`&notrace=0&priority=bitrate&network=WIFI&mode=down`,
 		)),
 	)
 	if parsemod {
@@ -138,7 +138,7 @@ func kwdes(songMid, quality string) (ourl, msg string) {
 			return
 		}
 		realQuality := strconv.Itoa(resp.Data.Bitrate)
-		if realQuality != infoFile.H[:len(infoFile.H)-1] {
+		if realQuality != infoFile.H[:len(infoFile.H)-1] /*&& resp.Data.Bitrate != 1*/ {
 			msg = sources.E_QNotMatch
 			if !env.Config.Source.ForceFallback {
 				return
