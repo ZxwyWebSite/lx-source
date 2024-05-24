@@ -3,10 +3,10 @@ package kg
 import (
 	"lx-source/src/env"
 	"lx-source/src/sources"
-	"slices"
 	"strings"
 
 	"github.com/ZxwyWebSite/ztool"
+	"github.com/ZxwyWebSite/ztool/x/slices"
 	"github.com/ZxwyWebSite/ztool/zcypt"
 )
 

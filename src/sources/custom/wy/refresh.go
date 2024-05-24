@@ -3,7 +3,6 @@ package wy
 import (
 	"lx-source/src/env"
 	wy "lx-source/src/sources/custom/wy/modules"
-	"maps"
 	"time"
 
 	// "time"
@@ -48,7 +47,10 @@ func refresh(loger *logs.Logger, now int64) error {
 		if out, ok := res.Body[`cookie`].(string); ok {
 			loger.Info(`获取数据成功`)
 			cmap := cookie.ToMap(cookie.Parse(out))
-			maps.Copy(cookies, cmap)
+			// inline call to maps.Copy
+			for k, v := range cmap {
+				cookies[k] = v
+			}
 			env.Config.Custom.Wy_Api_Cookie = cookie.Marshal(cookies)
 			loger.Debug(`Cookie: %#v`, cookies)
 			// if _, ok := cmap[`MUSIC_U`]; ok {
