@@ -34,8 +34,8 @@ jobs:
 
       - name: Fetch Modules
         run: |
-          wget -q "https://r2eu.zxwy.link/gh/lx-source/statics/ztool_20240525.zip" -O ztool.zip && unzip ztool.zip && rm ztool.zip
-          wget -q "https://r2eu.zxwy.link/gh/lx-source/statics/cr-go-sdk_20240525.zip" -O cr-go-sdk.zip && unzip cr-go-sdk.zip && rm cr-go-sdk.zip
+          wget -q "https://r2eu.zxwy.link/gh/lx-source/static/ztool_20240525.zip" -O ztool.zip && unzip ztool.zip && rm ztool.zip
+          wget -q "https://r2eu.zxwy.link/gh/lx-source/static/cr-go-sdk_20240525.zip" -O cr-go-sdk.zip && unzip cr-go-sdk.zip && rm cr-go-sdk.zip
 
       - name: Run Action
         run: cd repo && go run action.go && mv dist ../
