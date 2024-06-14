@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"unicode"
 )
 
 const (
@@ -23,7 +24,10 @@ const (
 	args_home = `/home/runner` // 用户目录
 )
 
-var workDir string
+var (
+	workDir string
+	homeDir string
+)
 
 func init() {
 	if runtime.GOOS != `linux` {
@@ -32,21 +36,35 @@ func init() {
 	}
 	workDir, _ = os.Getwd()
 	fmt.Println(`运行目录:`, workDir)
+	homeDir = os.Getenv(`HOME`)
+	if homeDir == `` {
+		homeDir = args_home
+	}
+	fmt.Println(`用户目录:`, homeDir)
 }
 
 type (
+	// 架构参数 [v2]
 	list_vers map[string]struct {
 		Tags string
 	}
-	list_arch map[string]struct {
-		AR   string
-		CC   string
-		CXX  string
-		Vers list_vers
+	// CGO参数 [nil]
+	list_cgos struct {
+		AR  string
+		CC  string
+		CXX string
 	}
+	// 架构列表 [amd64]
+	list_arch map[string]struct {
+		Cgos *list_cgos
+		Vers list_vers
+		Venv string // 覆盖架构参数名 'mipsle'->'GOMIPS'
+	}
+	// 目标系统 [linux]
 	list_goos map[string]struct {
 		Arch list_arch
 	}
+	// 编译环境 [go1.20.14]
 	list_conf map[string]struct {
 		Args []string
 		GoOS list_goos
@@ -66,9 +84,24 @@ type param struct {
 	GoIns  string   // 指令 GOAMD64=v2
 	Args   []string // 参数 ldflags
 	Tag    string   // 标志 go_json
-	AR     string
-	CC     string
-	CXX    string
+	Cgos   *list_cgos
+	Venv   string
+}
+
+// 获取相对用户目录
+func home(str string) string {
+	return homeDir + `/` + str
+}
+
+// 检测环境是否存在
+func chkenv(s ...string) (err error) {
+	for _, f := range s {
+		if _, e := exec.LookPath(f); e != nil && !errors.Is(e, exec.ErrDot) {
+			err = fmt.Errorf(`未找到指定环境: %s`, e)
+			break
+		}
+	}
+	return
 }
 
 func main() {
@@ -79,9 +112,11 @@ func main() {
 				`linux`: {
 					Arch: list_arch{
 						`amd64`: {
-							AR:  `x86_64-linux-gnu-ar`,
-							CC:  `x86_64-linux-gnu-gcc`,
-							CXX: `x86_64-linux-gnu-g++`,
+							Cgos: &list_cgos{
+								AR:  `x86_64-linux-gnu-ar`,
+								CC:  `x86_64-linux-gnu-gcc`,
+								CXX: `x86_64-linux-gnu-g++`,
+							},
 							Vers: list_vers{
 								`v1`: {
 									Tags: `go_json`,
@@ -98,9 +133,11 @@ func main() {
 							},
 						},
 						`arm`: {
-							AR:  `arm-linux-gnueabihf-gcc-ar`,
-							CC:  `arm-linux-gnueabihf-gcc`,
-							CXX: `arm-linux-gnueabihf-cpp`,
+							Cgos: &list_cgos{
+								AR:  `arm-linux-gnueabihf-gcc-ar`,
+								CC:  `arm-linux-gnueabihf-gcc`,
+								CXX: `arm-linux-gnueabihf-cpp`,
+							},
 							Vers: list_vers{
 								`5`: {
 									Tags: `go_json`,
@@ -114,23 +151,70 @@ func main() {
 							},
 						},
 						`arm64`: {
-							AR:  `aarch64-linux-gnu-gcc-ar`,
-							CC:  `aarch64-linux-gnu-gcc`,
-							CXX: `aarch64-linux-gnu-cpp`,
+							Cgos: &list_cgos{
+								AR:  `aarch64-linux-gnu-gcc-ar`,
+								CC:  `aarch64-linux-gnu-gcc`,
+								CXX: `aarch64-linux-gnu-cpp`,
+							},
 							Vers: list_vers{
 								``: {
 									Tags: `go_json`,
 								},
 							},
 						},
+						// 针对部分OpenWrt路由器系统 暂不支持开启CGO
+						`mips`: {
+							Vers: list_vers{
+								`hardfloat`: {
+									Tags: `go_json`,
+								},
+								`softfloat`: {
+									Tags: `go_json`,
+								},
+							},
+						},
+						`mipsle`: {
+							Vers: list_vers{
+								`hardfloat`: {
+									Tags: `go_json`,
+								},
+								`softfloat`: {
+									Tags: `go_json`,
+								},
+							},
+							Venv: `MIPS`,
+						},
+						`mips64`: {
+							Vers: list_vers{
+								`hardfloat`: {
+									Tags: `go_json`,
+								},
+								`softfloat`: {
+									Tags: `go_json`,
+								},
+							},
+						},
+						`mips64le`: {
+							Vers: list_vers{
+								`hardfloat`: {
+									Tags: `go_json`,
+								},
+								`softfloat`: {
+									Tags: `go_json`,
+								},
+							},
+							Venv: `MIPS64`,
+						},
 					},
 				},
 				`windows`: {
 					Arch: list_arch{
 						`amd64`: {
-							AR:  `x86_64-w64-mingw32-ar`,
-							CC:  `x86_64-w64-mingw32-gcc`,
-							CXX: `x86_64-w64-mingw32-cpp`,
+							Cgos: &list_cgos{
+								AR:  `x86_64-w64-mingw32-ar`,
+								CC:  `x86_64-w64-mingw32-gcc`,
+								CXX: `x86_64-w64-mingw32-cpp`,
+							},
 							Vers: list_vers{
 								`v2`: {
 									Tags: `go_json`,
@@ -148,9 +232,11 @@ func main() {
 				`android`: {
 					Arch: list_arch{
 						`amd64`: {
-							AR:  args_home + `/android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar`,
-							CC:  args_home + `/android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android24-clang`,
-							CXX: args_home + `/android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android24-clang++`,
+							Cgos: &list_cgos{
+								AR:  home(`android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar`),
+								CC:  home(`android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android24-clang`),
+								CXX: home(`android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android24-clang++`),
+							},
 							Vers: list_vers{
 								``: {
 									Tags: `go_json`,
@@ -158,9 +244,11 @@ func main() {
 							},
 						},
 						`arm64`: {
-							AR:  args_home + `/android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar`,
-							CC:  args_home + `/android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang`,
-							CXX: args_home + `/android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang++`,
+							Cgos: &list_cgos{
+								AR:  home(`android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar`),
+								CC:  home(`android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android24-clang`),
+								CXX: home(`android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android24-clang++`),
+							},
 							Vers: list_vers{
 								``: {
 									Tags: `go_json`,
@@ -168,9 +256,11 @@ func main() {
 							},
 						},
 						`386`: {
-							AR:  args_home + `/android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar`,
-							CC:  args_home + `/android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/i686-linux-android24-clang`,
-							CXX: args_home + `/android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/i686-linux-android24-clang++`,
+							Cgos: &list_cgos{
+								AR:  home(`android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar`),
+								CC:  home(`android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android24-clang`),
+								CXX: home(`android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android24-clang++`),
+							},
 							Vers: list_vers{
 								``: {
 									Tags: `go_json`,
@@ -178,9 +268,11 @@ func main() {
 							},
 						},
 						`arm`: {
-							AR:  args_home + `/android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar`,
-							CC:  args_home + `/android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi24-clang`,
-							CXX: args_home + `/android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi24-clang++`,
+							Cgos: &list_cgos{
+								AR:  home(`android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar`),
+								CC:  home(`android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android24-clang`),
+								CXX: home(`android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android24-clang++`),
+							},
 							Vers: list_vers{
 								``: {
 									Tags: `go_json`,
@@ -189,27 +281,44 @@ func main() {
 						},
 					},
 				},
-				// `darwin`: {
-				// 	Arch: list_arch{
-				// 		`amd64`: {
-				// 			CC: ``,
-				// 		},
-				// 		`arm64`: {
-				// 			CC: ``,
-				// 		},
-				// 	},
-				// },
+				// Mac OS
+				`darwin`: {
+					Arch: list_arch{
+						`amd64`: {
+							Vers: list_vers{
+								`v2`: {
+									Tags: `go_json`,
+								},
+								`v3`: {
+									Tags: `sonic avx`,
+								},
+							},
+						},
+						`arm64`: {
+							Vers: list_vers{
+								``: {
+									Tags: `go_json`,
+								},
+							},
+						},
+					},
+				},
 			},
 		},
-		args_home + `/go/bin/go1.20.14`: {
-			Args: def_args,
+		home(`go/bin/go1.20.14`): {
+			Args: []string{
+				`-trimpath`, `-buildvcs=false`,
+				`-ldflags`, `-s -w`,
+			},
 			GoOS: list_goos{
 				`windows`: {
 					Arch: list_arch{
 						`amd64`: {
-							AR:  `x86_64-w64-mingw32-ar`,
-							CC:  `x86_64-w64-mingw32-gcc`,
-							CXX: `x86_64-w64-mingw32-cpp`,
+							Cgos: &list_cgos{
+								AR:  `x86_64-w64-mingw32-ar`,
+								CC:  `x86_64-w64-mingw32-gcc`,
+								CXX: `x86_64-w64-mingw32-cpp`,
+							},
 							Vers: list_vers{
 								`v1`: {
 									Tags: `go_json`,
@@ -237,8 +346,24 @@ func main() {
 `, args_name, args_path, args_zpak)
 	// 解析配置文件
 	for goVer, conf_list := range def_list {
+		// 环境检测
+		if err := chkenv(goVer); err != nil {
+			fmt.Println(err, `跳过该环境`)
+			continue
+		}
 		for goOS, goos_list := range conf_list.GoOS {
 			for goArch, arch_list := range goos_list.Arch {
+				// 工具链检测
+				if arch_list.Cgos != nil {
+					if err := chkenv(
+						arch_list.Cgos.AR,
+						arch_list.Cgos.CC,
+						arch_list.Cgos.CXX,
+					); err != nil {
+						fmt.Println(err, `跳过该架构`)
+						continue
+					}
+				}
 				for goIns, vers_list := range arch_list.Vers {
 					// 构建程序二进制
 					if err := build(&param{
@@ -248,9 +373,8 @@ func main() {
 						GoIns:  goIns,
 						Args:   conf_list.Args,
 						Tag:    vers_list.Tags,
-						AR:     arch_list.AR,
-						CC:     arch_list.CC,
-						CXX:    arch_list.CXX,
+						Cgos:   arch_list.Cgos,
+						Venv:   arch_list.Venv,
 					}); err != nil {
 						fmt.Println(`err:`, err)
 					}
@@ -262,15 +386,6 @@ func main() {
 }
 
 func build(p *param) (err error) {
-	// 检测必要环境
-	for _, f := range []string{
-		p.GoVer, p.AR, p.CC, p.CXX,
-	} {
-		if _, e := exec.LookPath(f); e != nil && !errors.Is(e, exec.ErrDot) {
-			err = fmt.Errorf(`未找到指定环境: %s`, e)
-			return
-		}
-	}
 	// 拼接程序名称
 	var b strings.Builder
 	b.WriteString(args_name) // lx-source
@@ -278,7 +393,17 @@ func build(p *param) (err error) {
 	b.WriteString(p.GoOS)    // lx-source-linux
 	b.WriteByte('-')         // lx-source-linux-
 	b.WriteString(p.GoArch)  // lx-source-linux-amd64
-	b.WriteString(p.GoIns)   // lx-source-linux-amd64v2
+	var digit byte
+	if p.Venv != `` {
+		digit = p.Venv[len(p.Venv)-1]
+	} else {
+		digit = p.GoArch[len(p.GoArch)-1]
+	}
+	if !unicode.IsDigit(rune(digit)) {
+		// 架构名结尾不是数字的再加一个连字符
+		b.WriteByte('-') // lx-source-linux-mipsle-softfloat
+	}
+	b.WriteString(p.GoIns) // lx-source-linux-amd64v2
 	if biname := filepath.Base(p.GoVer); biname != `go` {
 		b.WriteByte('-')      // lx-source-linux-amd64v2-
 		b.WriteString(biname) // lx-source-linux-amd64v2-go1.20.14
@@ -309,12 +434,24 @@ func build(p *param) (err error) {
 	cmd.Env = append(os.Environ(), []string{
 		`GOOS=` + p.GoOS,
 		`GOARCH=` + p.GoArch,
-		`AR=` + p.AR,
-		`CC=` + p.CC,
-		`CXX=` + p.CXX,
-		`CGO_ENABLED=1`,
-		`GO` + strings.ToUpper(p.GoArch) + `=` + p.GoIns,
 	}...)
+	if p.Cgos != nil {
+		cmd.Env = append(cmd.Env, []string{
+			`AR=` + p.Cgos.AR,
+			`CC=` + p.Cgos.CC,
+			`CXX=` + p.Cgos.CXX,
+			`CGO_ENABLED=1`,
+		}...)
+	} else {
+		cmd.Env = append(cmd.Env, `CGO_ENABLED=0`)
+	}
+	if p.GoIns != `` {
+		if p.Venv != `` {
+			cmd.Env = append(cmd.Env, `GO`+p.Venv+`=`+p.GoIns)
+		} else {
+			cmd.Env = append(cmd.Env, `GO`+strings.ToUpper(p.GoArch)+`=`+p.GoIns)
+		}
+	}
 
 	if err = cmd.Start(); err == nil {
 		err = cmd.Wait()

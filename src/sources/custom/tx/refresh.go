@@ -123,9 +123,18 @@ func refresh(loger *logs.Logger, now int64) error {
 		// loger.Error(`请求Api失败: %s`, err)
 		return errors.New(`请求Api失败: ` + err.Error())
 	}
+	loger.Debug(`Resp: %+v`, resp)
 	if resp.Req1.Code != 0 {
+		switch resp.Req1.Code {
+		case 1000:
+			return fmt.Errorf(`%v: Token无效或已过期`, resp.Req1.Code)
+		case 2000:
+			return fmt.Errorf(`%v: 该Token不支持刷新`, resp.Req1.Code)
+		default:
+			return fmt.Errorf(`%v: 刷新登录失败`, resp.Req1.Code)
+		}
 		// loger.Warn("刷新登录失败, code: %v\n响应体: %+v", resp.Req1.Code, resp)
-		return fmt.Errorf("刷新登录失败, code: %v\n响应体: %+v", resp.Req1.Code, resp)
+		// return fmt.Errorf("刷新登录失败, code: %v\n响应体: %+v", resp.Req1.Code, resp)
 	}
 	loger.Info(`刷新登录成功`)
 	env.Config.Custom.Tx_Uuin = resp.Req1.Data.StrMusicId

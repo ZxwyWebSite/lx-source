@@ -343,8 +343,8 @@ func Qlogin_graph(l *logs.Logger) error {
 	env.Config.Custom.Tx_Enable = true
 	env.Config.Custom.Tx_Uuin = out6.Req.Data.StrMusicid
 	env.Config.Custom.Tx_Ukey = out6.Req.Data.Musickey
-	env.Config.Custom.Tx_Refresh_Enable = true
-	env.Config.Custom.Tx_Refresh_Interval = time.Date(now.Year(), now.Month(), now.Day()+5, 0, 0, 0, 0, now.Location()).Unix()
+	env.Config.Custom.Tx_Refresh_Enable = false
+	// env.Config.Custom.Tx_Refresh_Interval = time.Date(now.Year(), now.Month(), now.Day()+5, 0, 0, 0, 0, now.Location()).Unix()
 	// env.Config.Custom.Tx_RefreshToken = out6.Req.Data.RefreshToken
 	// env.Config.Custom.Tx_AccessToken = out6.Req.Data.AccessToken
 

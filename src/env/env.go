@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	Version = `1.0.3.0518`
+	Version = `1.0.3.0614`
 )
 
 var (
@@ -124,6 +124,7 @@ type (
 		Kw_Bd_DevId string `comment:"field user.device_id"`
 		// kw kwdes
 		Kw_Des_Type   string `comment:"返回格式 0: text, 1: json"`
+		Kw_Des_Source string `comment:"query source"`
 		Kw_Des_Header string `comment:"请求头 User-Agent"`
 
 		// kg

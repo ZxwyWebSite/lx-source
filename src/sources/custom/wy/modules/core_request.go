@@ -20,7 +20,11 @@ import (
 
 const anonymous_token = `1f5fa7b6a6a9f81a11886e5186fde7fb98e25cf0036d7afd055b980b2261f5464b7f5273fc3921d1262bfec66a19a30c41d8da00c3685f5ace96f0d5a48b6db334d974731083682e3324751bcc9aaf44c3061cd1`
 
-var wapiReg = regexp.MustCompile(`\w*api`)
+var (
+	wapiReg = regexp.MustCompile(`\w*api`)
+	csrfReg = regexp.MustCompile(`_csrf=([^(;|$)]+)`)
+	domaReg = regexp.MustCompile(`\s*Domain=[^(;|$)]+;*`)
+)
 
 var userAgentMap = map[string]string{
 	`mobile`: `Mozilla/5.0 (iPhone; CPU iPhone OS 17_2_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.1`,
@@ -103,8 +107,7 @@ func createRequest(method, url string, data map[string]any, options reqOptions) 
 	switch options.Crypto {
 	case `weapi`:
 		options.Headers[`User-Agent`] = `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 Edg/116.0.1938.69`
-		reg := regexp.MustCompile(`_csrf=([^(;|$)]+)`)
-		csrfToken := reg.FindStringSubmatch(options.Headers[`Cookie`])
+		csrfToken := csrfReg.FindStringSubmatch(options.Headers[`Cookie`])
 		if len(csrfToken) > 1 {
 			data[`csrf_token`] = csrfToken[1]
 		} else {
@@ -189,9 +192,8 @@ func createRequest(method, url string, data map[string]any, options reqOptions) 
 					}
 					if err == nil {
 						answer.Cookie = res.Header[`Set-Cookie`] //res.Header.Values(`set-cookie`)
-						reg := regexp.MustCompile(`\s*Domain=[^(;|$)]+;*`)
 						for i, v := range answer.Cookie {
-							answer.Cookie[i] = reg.ReplaceAllString(v, ``)
+							answer.Cookie[i] = domaReg.ReplaceAllString(v, ``)
 						}
 						if options.Crypto == `eapi` && body[0] != '{' {
 							err = json.Unmarshal(decrypt(body), &answer.Body)
