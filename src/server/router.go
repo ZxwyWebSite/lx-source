@@ -50,7 +50,7 @@ func InitRouter() *gin.Engine {
 				sources.S_lx: qmap[sources.I_lx],
 			},
 			// 自定义源脚本更新
-			`script`: env.DefCfg.Script, //env.Config.Script,
+			`script`: env.Config.Script.Update, //env.Config.Script,
 			// 数据统计
 			`summary`: gin.H{
 				`StartAt`: startime, // 启动时间

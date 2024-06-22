@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	Version = `1.0.3.0614`
+	Version = `1.0.3.0622`
 )
 
 var (
@@ -159,12 +159,22 @@ type (
 		// Lx_Enable bool `comment:"是否启用小洛源"`
 	}
 	// 脚本
-	Conf_Script struct {
+	Conf_Script_Update struct {
 		Ver   string `comment:"自定义脚本版本" json:"ver"`
 		Log   string `comment:"更新日志" json:"log"`
 		Url   string `comment:"脚本下载地址 (public目录内文件名)" json:"url"`
 		Force bool   `comment:"强制推送更新" json:"force"`
-		Auto  int    `comment:"自动填写配置(beta) 0: 关闭, 1: 仅api地址, 2: 包含密钥" json:"-"`
+	}
+	Conf_Script struct {
+		Name     string `comment:"源的名字，建议不要过长，24个字符以内"`
+		Descript string `comment:"源的描述，建议不要过长，36个字符以内，可不填"`
+		Version  string `comment:"源的版本号，可不填"`
+		Author   string `comment:"脚本作者名字，可不填"`
+		Homepage string `comment:"脚本主页，可不填"`
+
+		Update Conf_Script_Update `ini:"Script"`
+
+		Auto int `comment:"自动填写配置(beta) 0: 关闭, 1: 仅api地址, 2: 包含密钥"`
 	}
 	// 缓存
 	Conf_Cache struct {
@@ -266,12 +276,20 @@ var (
 			Tx_Refresh_Interval: 86000,
 		},
 		Script: Conf_Script{
-			Log: `发布更新 (请删除旧源后重新导入)：进行了部分优化，修复了部分Bug`, // 更新日志
+			Name:     `Lx-Source-Script`,
+			Descript: `洛雪音乐自定义源脚本`,
+			Version:  `1.1.0`,
+			Author:   `Zxwy`,
+			Homepage: `https://github.com/ZxwyWebSite/lx-script`,
 
-			Ver:   `1.0.3`, // 自定义脚本版本
-			Force: true,    // 强制推送更新
+			Update: Conf_Script_Update{
+				Log: `发布更新 (请删除旧源后重新导入)：进行了部分优化，修复了部分Bug`, // 更新日志
 
-			Url: `lx-custom-source.js`, // 脚本下载地址
+				Ver:   `1.0.3`, // 自定义脚本版本
+				Force: true,    // 强制推送更新
+
+				Url: `lx-custom-source.js`, // 脚本下载地址
+			},
 		},
 		Cache: Conf_Cache{
 			Mode:       `local`, // 缓存模式

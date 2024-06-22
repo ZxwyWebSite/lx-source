@@ -242,7 +242,7 @@ func main() {
 		home(`go/bin/go1.20.14`): {
 			Args: []string{
 				`-trimpath`, `-buildvcs=false`,
-				`-ldflags`, `-s -w`,
+				`-ldflags`, `-s -w -extldflags '-v -static'`,
 			},
 			GoOS: list_goos{
 				`windows`: {
@@ -269,6 +269,36 @@ func main() {
 				},
 				`linux`: {
 					Arch: list_arch{
+						`arm`: {
+							Cgos: &list_cgos{
+								AR:  `arm-linux-gnueabihf-gcc-ar`,
+								CC:  `arm-linux-gnueabihf-gcc`,
+								CXX: `arm-linux-gnueabihf-cpp`,
+							},
+							Vers: list_vers{
+								`5`: {
+									Tags: `go_json`,
+								},
+								`6`: {
+									Tags: `go_json`,
+								},
+								`7`: {
+									Tags: `go_json`,
+								},
+							},
+						},
+						`arm64`: {
+							Cgos: &list_cgos{
+								AR:  `aarch64-linux-gnu-gcc-ar`,
+								CC:  `aarch64-linux-gnu-gcc`,
+								CXX: `aarch64-linux-gnu-cpp`,
+							},
+							Vers: list_vers{
+								``: {
+									Tags: `go_json`,
+								},
+							},
+						},
 						// 针对部分OpenWrt路由器系统 暂不支持开启CGO
 						`mips`: {
 							Vers: list_vers{

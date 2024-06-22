@@ -47,5 +47,5 @@ require (
 
 replace (
 	github.com/ZxwyWebSite/cr-go-sdk v0.0.2 => ../cr-go-sdk
-	github.com/ZxwyWebSite/ztool v0.0.1 => ./pkg/ztool // ../ztool
+	github.com/ZxwyWebSite/ztool v0.0.1 => ../ztool // ./pkg/ztool
 )

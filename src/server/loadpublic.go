@@ -10,6 +10,7 @@ import (
 	"lx-source/src/env"
 	"net/http"
 	"path/filepath"
+	"strings"
 
 	"github.com/ZxwyWebSite/ztool"
 	"github.com/ZxwyWebSite/ztool/x/bytesconv"
@@ -105,6 +106,63 @@ func loadPublic(r *gin.Engine) {
 		})
 	} else {
 		r.StaticFileFS(`/lx-custom-source.js`, `lx-custom-source.js`, httpFS)
+	}
+	// 新版源脚本
+	{
+		// 构建文件头
+		var b strings.Builder
+		b.Grow(75 +
+			len(env.Config.Script.Name) +
+			len(env.Config.Script.Descript) +
+			len(env.Config.Script.Version) +
+			len(env.Config.Script.Author) +
+			len(env.Config.Script.Homepage),
+		)
+		b.WriteString("/*!\n * @name ")
+		b.WriteString(env.Config.Script.Name)
+		b.WriteString("\n * @description ")
+		b.WriteString(env.Config.Script.Descript)
+		b.WriteString("\n * @version v")
+		b.WriteString(env.Config.Script.Version)
+		b.WriteString("\n * @author ")
+		b.WriteString(env.Config.Script.Author)
+		b.WriteString("\n * @homepage ")
+		b.WriteString(env.Config.Script.Homepage)
+		b.WriteString("\n */\n")
+		// 构建文件体
+		file, _ := publicFS.Open(`lx-source-script.js`)
+		data, _ := io.ReadAll(file)
+		file.Close()
+		r.GET(`/lx-source-script.js`, func(c *gin.Context) {
+			var mime string
+			if _, ok := c.GetQuery(`raw`); ok {
+				mime = `application/octet-stream`
+			} else {
+				mime = `text/javascript; charset=utf-8`
+			}
+			// 构建文件尾
+			var d strings.Builder
+			d.WriteString(`globalThis.ls={api:{addr:'`)
+			d.WriteString(env.Config.Cache.Local_Bind)
+			d.WriteString(`',pass:'`)
+			if env.Config.Auth.ApiKey_Enable {
+				if env.Config.Script.Auto >= 2 {
+					d.WriteString(env.Config.Auth.ApiKey_Value)
+				} else {
+					if key, ok := c.GetQuery(`key`); ok {
+						d.WriteString(key)
+					}
+				}
+			}
+			d.WriteString(`'}};`)
+			d.WriteByte('\n')
+			// Render
+			c.Status(http.StatusOK)
+			c.Writer.Header()[`Content-Type`] = []string{mime}
+			c.Writer.WriteString(b.String())
+			c.Writer.WriteString(d.String())
+			c.Writer.Write(data)
+		})
 	}
 	r.StaticFileFS(`/favicon.ico`, `lx-icon.ico`, httpFS)
 	r.StaticFileFS(`/status`, `status.html`, httpFS)
